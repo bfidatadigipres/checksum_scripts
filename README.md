@@ -1,6 +1,8 @@
 # BFI checksum_scripts
 
-Checksum comparison scripts that uses Python standard library zlib and hashlib to generate CRC32 and MD5 hashes, and uses timeit to measure the speed that it takes to run each checksum pass. There are two versions that function fairly similarly and both will run on Python2.7 or Python3.
+Checksum comparison scripts that uses Python standard library zlib and hashlib to generate CRC32 and MD5 hashes respectively. They both use timeit to measure the speed that it takes to run each checksum pass. Timeit has been used to allow multiple timing assessments on smaller files. But as the BFI's are GBs the number is set to 1 timing attempt and the script is run one per file every four hours for 24 hours. You can change the number=1 setting to another figure for smaller files, such as number=100, and you will receive an average time across those 100. Default is 1,000,000 so best not remove the number=1/100.
+
+There are two versions of the checksum_speed_test script that function fairly similarly detailed below, and both will run on Python2.7 or Python3: 
 
 ## checksum_speed_tests.py
 
