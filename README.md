@@ -13,11 +13,9 @@ The script performs the following functions:
 1. Checks the path is legitimate and present
 2. If both are True it stores sys.argv[1] as variable 'filename'.
 3. Makes timeit[lambda: ] calls to two functions as variables:
-  crc(input):
-  - Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 65536 until the total file
+  - crc(input): Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 65536 until the total file
     has been checksum evaluated. Prints the CRC32 checksum, formatted 08x
-  md5(input):
-  - Opens the input file in bytes, splits the file into chunks and iterates through these (size 4096)
+  - md5(input): Opens the input file in bytes, splits the file into chunks and iterates through these (size 4096)
     until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
 4. Outputs the time taken for each function, along with the input file name.
 
@@ -32,11 +30,9 @@ The script performs the following functions:
 2. For each path it iterates through the files within it (there is no check here for file type).
 3. The script creates a filepath variable for each file, and runs a size check against it, in MB.
 4. Passes the filepath to the crc() and md5() functions using timeit to record the duration taken.
-  crc(file):
-  - Opens the media file read only in bytes. Passes to zlib.crc32 in buffersizes of 65536 until the
+  - crc(file): Opens the media file read only in bytes. Passes to zlib.crc32 in buffersizes of 65536 until the
     total file has been evaluated. Returns the CRC32 checksum, formatted 08x.
-  md5(file):
-  - Opens the input file in read only bytes. Splits the file into chunks, iterates through 4096
+  - md5(file): Opens the input file in read only bytes. Splits the file into chunks, iterates through 4096
     bytes at a time. Returns the MD5 checksum, formatted hexdigest.
 5. Outputs to log the following data, tab separated:
    Filepath     MD5/CRC32      Size in MB      Time taken in seconds       Python version
