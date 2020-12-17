@@ -4,6 +4,7 @@ Checksum comparison scripts that uses Python standard library zlib and hashlib t
 
 There are two versions of the checksum_speed_test script that function fairly similarly detailed below, and both will run on Python2.7 or Python3: 
 
+
 ## checksum_speed_tests.py
 
 To run the script:
@@ -21,7 +22,6 @@ The script performs the following functions:
     until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
 4. Outputs the time taken for each function, along with the input file name.
 
-Python 2.7 and 3 compliant.
 
 ## checksum_speed_tests_cron.py
 
@@ -39,11 +39,16 @@ The script performs the following functions:
 5. Outputs to log the following data, tab separated:
    Filepath     MD5/CRC32      Size in MB      Time taken in seconds       Python version
 
+
 ## test_checksum_speed_tests.py
 
-Test script for the md5 and crc functions of checksum_speed_tests.py (written to work with cron edition which returns checksum values). This is a first attempt to work with PyTest asserts, and as such no import of pytest is required. The test script should be kept alongside the script it's testing, and you can run it (after pip installing pytest) by two methods:
+Test script for the md5 and crc functions of checksum_speed_test scripts. This is a first attempt to work with PyTest asserts. No import of pytest is required to run this script. This test script should be kept in the same directory as the script it's testing so pytest can find it, and should have the same name as the script to be tested, name appended 'test_'.
 
-cd into the folder that holds both the scripts and run:
+You will need to install pytest. Thes easiest way is to use pip, or pip3:
+
+`pip install pytest`
+
+There are two ways to run a pytest. Change directory of your terminal console to the folder that holds both the scripts and run:
 `py.test -v`
 This will run any/all scripts prefixed "test_"
 
@@ -51,4 +56,4 @@ Alternatively, from any directory run:
 `pytest -v /path_to_script/test_checksum_speed_tests.py`
 The -v requests verbosity, useful when you have multiple test functions within the one script.
 
-Python 3 compliant.
+Python 3 compliant, not tested on Python2.
