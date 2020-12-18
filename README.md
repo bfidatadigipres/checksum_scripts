@@ -58,9 +58,10 @@ The script performs the following functions:
 
 ## test_checksum_speed_test.py
 
-Test script for the md5 and crc functions of checksum_speed_test scripts. This is a first attempt to work with PyTest asserts. No import of pytest is required to run this script. This test script should be kept in the same directory as the script it's testing so pytest can find it, and should have the same name as the script to be tested, name appended 'test_'.
+Test script for the md5 and crc functions of checksum_speed_test scripts. This is a first attempt to work with PyTest asserts. No `import pytest` is required in this script to run the test. This test script should be kept in the same directory as the script it's testing so pytest can find it, and should have the same name as the script to be tested, name appended 'test_'.
 
-You will need to install pytest. Thes easiest way is to use pip, or pip3:
+You will need to install pytest. The easiest way is to use pip/pip3 globally or in a Virtual Environment.
+(Guidance here: https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
 
 `pip install pytest`
 
@@ -69,7 +70,7 @@ There are two ways to run a pytest. Change directory of your terminal console to
 This will run any/all scripts prefixed "test_".
 
 Alternatively, from any directory run:
-`pytest -v /path_to_script/test_checksum_speed_tests.py`
+`pytest -v /path_to_script/test_checksum_speed_test.py`
 The -v requests verbosity, useful when you have multiple test functions within the one script.
 
 Python 3 compliant, not tested on Python2.
