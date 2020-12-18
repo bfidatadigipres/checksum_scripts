@@ -9,7 +9,7 @@ There are two versions of the checksum_speed_test script that allow for single u
 There is potential for furher expansion of these tests by altering buffersize and chunk size allocations for the checksum functions. We've not had a chance to experiment with this yet, but welcome feedback and advice about optimising hash generation.
 
 
-## checksum_speed_tests.py
+## checksum_speed_test.py
 
 This script allows for a single file to be input and tested against zlib CRC32 and hashlib MD5 modules of Python to see which is quicker. You can drag/drop a file after the python script name to make sure the path is correct.
 
@@ -27,7 +27,7 @@ The script performs the following functions:
 4. Outputs the time taken for each function, along with the input file name.
 
 
-## checksum_speed_tests_cron.py
+## checksum_speed_test_cron.py
 
 Mostly identical to checksum_speed_tests.py, but with print statements removed so runs silently and appends to a log file at a specified path. To run this script you need to edit the paths variable (line 37/38) and specify a path for your log ouput (line 30). If you're testing in both Python2 and Python3 then you can also amend the version in line 87 and 88.
 
