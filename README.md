@@ -6,6 +6,8 @@ The scripts in this repository use Python standard library zlib and hashlib to g
 
 There are two versions of the checksum_speed_test script that allow for single use checksum testing or automated testing of directories, and both will run on Python2.7 or Python3.
 
+There is potential for furher expansion of these tests by altering buffersize and chunk size allocations for the checksum functions. We've not had a chance to experiment with this yet, but welcome feedback and advice about optimum hash generation.
+
 
 ## checksum_speed_tests.py
 
