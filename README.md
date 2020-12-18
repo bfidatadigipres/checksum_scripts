@@ -10,7 +10,7 @@ There is potential for furher expansion of these tests by altering buffersize an
 
 Result from the tests, run on 8 thread 12GB Ubuntu VM with 10Gbps network connection to two different network shares: CRC32 Python 3 implementation is fastest, with MD5 Python 2 implementation slowest.
 
-Methodology - MB per Second
+## Methodology - MB per Second
 
 MD5 Python 2 - 230.3371534
 
