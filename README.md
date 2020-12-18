@@ -8,6 +8,14 @@ There are two versions of the checksum_speed_test script that allow for single u
 
 There is potential for furher expansion of these tests by altering buffersize and chunk size allocations for the checksum functions. We've not had a chance to experiment with this yet, but welcome feedback and advice about optimising hash generation.
 
+Result from the tests, run on 8 thread 12GB Ubuntu VM with 10Gbps network connection to two different network shares: CRC32 Python 3 implementation is fastest, with MD5 Python 2 implementation slowest.
+
+Methodology         Time per MB in Secs   MB per Second
+MD5 Python 2        0.010090932           230.3371534
+MD5 Python 3        0.004238077           349.0446795
+CRC32 Python 2      0.004238086           362.3504839
+CRC32 Python 3      0.003920059           394.4417439
+
 
 ## checksum_speed_test.py
 
