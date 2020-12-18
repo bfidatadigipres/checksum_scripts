@@ -36,7 +36,8 @@ The script performs the following functions:
     has been checksum evaluated. Prints the CRC32 checksum to the terminal output, formatted 08x.
   - md5(filename): Opens the input file in bytes, splits the file into chunks and iterates through these (size 4096)
     until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
-4. Outputs the time taken for each function, along with the input file name.
+4. Outputs the time taken for each function to terminal console. Also outputs to (or appends to if you have multiple attempts) a log
+   in the current terminal directory. Tab separated: Filepath MD5/CRC32 Size in MB Time taken in seconds.
 
 
 ## checksum_speed_test_crontab.py
