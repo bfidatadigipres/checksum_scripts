@@ -10,15 +10,15 @@ There is potential for furher expansion of these tests by altering buffersize an
 
 Result from the tests, run on 8 thread Ubuntu VM with 12GB RAM and 10Gbps network connection - testing with files on two different network shares: CRC32 Python 3 implementation is fastest, with MD5 Python 2 implementation slowest.
 
-#### Methodology        MB per Second
+#### Methodology | MB per Second
 
-MD5 Python 2       230.3371534
+MD5 Python 2 | 230.3371534
 
-MD5 Python 3       349.0446795
+MD5 Python 3 | 349.0446795
 
-CRC32 Python 2     362.3504839
+CRC32 Python 2 | 362.3504839
 
-CRC32 Python 3     394.4417439
+CRC32 Python 3 | 394.4417439
 
 
 ## checksum_speed_test.py
