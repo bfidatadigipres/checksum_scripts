@@ -1,6 +1,8 @@
 # BFI checksum_scripts
 
-Checksum comparison scripts that uses Python standard library zlib and hashlib to generate CRC32 and MD5 hashes respectively. They both use timeit to measure the speed that it takes to run each checksum pass. Timeit has been used to allow multiple timing assessments on smaller files. But as the BFI's are GBs the number is set to 1 timing attempt and the script is run one per file every four hours for 24 hours. You can change the number=1 setting to another figure for smaller files, such as number=100, and you will receive an average time across those 100. Default is 1,000,000 so best not remove the number=1/100.
+The BFI National Archive have been running checksum speed comparisons, with an aim to reducing bottlenecks caused by an increasing volume of digital media files. Ons such bottleneck is caused by our use of hashlib in Python2 scripts to generate checksums. We have decided to run some comparisons between CRC32 and MD5, as we currently have support for these within our tape library system.
+
+The scripts in this repository use Python standard library zlib and hashlib to generate CRC32 and MD5 hashes respectively. They both use timeit to measure the speed that it takes to run each checksum pass. As the media files are generally many GBs in size the number is set to 1 in timeit, so the script is only run one per file every four hours for 24 hours. Timeit however, was developed to create averages across multiple speed tests on short snippets of code. If you are checksum testing smaller files you can change the `number=1` setting to another figure, such as number=100 and run the test to receive an average time across those 100. Timeit's default is 1,000,000 so do ensure you set a number figure.
 
 There are two versions of the checksum_speed_test script that function fairly similarly detailed below, and both will run on Python2.7 or Python3: 
 
