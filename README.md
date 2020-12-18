@@ -27,7 +27,7 @@ The script performs the following functions:
 4. Outputs the time taken for each function, along with the input file name.
 
 
-## checksum_speed_test_cron.py
+## checksum_speed_test_crontab.py
 
 Mostly identical to checksum_speed_tests.py, but with print statements removed so runs silently and appends to a log file at a specified path. To run this script you need to edit the paths variable (line 37/38) and specify a path for your log ouput (line 30). If you're testing in both Python2 and Python3 then you can also amend the version in line 87 and 88.
 
@@ -44,7 +44,7 @@ The script performs the following functions:
    Filepath     MD5/CRC32      Size in MB      Time taken in seconds       Python version
 
 
-## test_checksum_speed_tests.py
+## test_checksum_speed_test.py
 
 Test script for the md5 and crc functions of checksum_speed_test scripts. This is a first attempt to work with PyTest asserts. No import of pytest is required to run this script. This test script should be kept in the same directory as the script it's testing so pytest can find it, and should have the same name as the script to be tested, name appended 'test_'.
 
