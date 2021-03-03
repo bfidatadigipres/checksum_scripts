@@ -6,39 +6,18 @@ The scripts in this repository use Python standard library zlib and hashlib to g
 
 There are two versions of the checksum_speed_test script that allow for single use checksum testing or automated testing of directories, and both will run on Python2.7 or Python3.
 
-There is potential for furher expansion of these tests by altering buffersize and chunk size allocations for the checksum functions. We've not had a chance to experiment with this yet, but welcome feedback and advice about optimising hash generation.
-
-Result from the tests, run on 8 thread Ubuntu VM with 12GB RAM and 10Gbps network connection - testing with files on two different network shares: CRC32 Python 3 implementation is fastest, with MD5 Python 2 implementation slowest.
+Result from the tests, run on 8 thread Ubuntu VM with 12GB RAM and 10Gbps network connection - testing with files on two different network shares: CRC32 chunk size 65536 using Python 3 (3.6 installed) implementation is fastest, with MD5 chunk size 4096 Python 2 (2.7 installed) implementation slowest.
 
 #### Methodology | MB per Second
-
-First tests variable chunk sizes:
-
-MD5 Python 2 | 230.3371534
-
-MD5 Python 3 | 349.0446795
-
-CRC32 Python 2 | 362.3504839
-
-CRC32 Python 3 | 394.4417439
-
-
-Second test taken across a one week, fixed chunk sizes:
+## Tests taken across a one week
 
 MD5 4096 Python2 | 224.778250340242
-
 MD5 65536 Python2 | 357.535889127455
-
 MD5 4096 Python3 | 326.132731717776
-
 MD5 65536 Python3 | 398.015125290373
-
 CRC32 4096 Python2 | 265.358376013364
-
 CRC32 65536 Python2 | 546.4826626438
-
 CRC32 4096 Python3 | 348.466331006633
-
 CRC32 65536 Python3 | 609.691086005532
 
 ## checksum_speed_test.py
@@ -52,12 +31,16 @@ The script performs the following functions:
 1. Checks the path supplied is legitimate and present.
 2. If both are True it stores sys.argv[1] (the path you supplied) as variable 'filename'.
 3. Makes timeit[lambda: ] calls to the following functions supplying the filename:
-  - crc(filename): Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 65536, until the whole of the file
+  - crc_4096(filename): Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 4096, until the whole of the file
     has been checksum evaluated. Prints the CRC32 checksum to the terminal output, formatted 08x.
-  - md5(filename): Opens the input file in bytes, splits the file into chunks and iterates through these (size 4096)
+  - crc_65536(filename): Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 65536, until the whole of the file
+    has been checksum evaluated. Prints the CRC32 checksum to the terminal output, formatted 08x.
+  - md5_4096(filename): Opens the input file in bytes, splits the file into chunks and iterates through these (size 4096)
+    until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
+  - md5_65536(filename): Opens the input file in bytes, splits the file into chunks and iterates through these (size 65536)
     until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
 4. Outputs the time taken for each function to terminal console. Also outputs to (or appends to if you have multiple attempts) a log
-   in the current terminal directory. Tab separated: Filepath MD5/CRC32 Size in MB Time taken in seconds.
+   in the current terminal directory. Tab separated: Filepath - MD5/CRC32 chunk size - Size in MB - Time taken in seconds - Python version.
 
 
 ## checksum_speed_test_crontab.py
@@ -69,12 +52,16 @@ The script performs the following functions:
 2. For each path it iterates through the files within it (there is no check here for file type).
 3. The script creates a filepath variable for each file, and runs a size check against it, in MB.
 4. Passes the filepath to the following functions using timeit to record the duration taken.
-  - crc(file): Opens the media file read only in bytes. Passes to zlib.crc32 in buffersizes of 65536 until the
-    total file has been evaluated. Returns the CRC32 checksum, formatted 08x.
-  - md5(file): Opens the input file in read only bytes. Splits the file into chunks, iterates through 4096
-    bytes at a time. Returns the MD5 checksum, formatted hexdigest.
+  - crc_4096(filename): Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 4096, until the whole of the file
+    has been checksum evaluated. Prints the CRC32 checksum to the terminal output, formatted 08x.
+  - crc_65536(filename): Opens the file in bytes, and passes to zlib.crc32 in buffersizes of 65536, until the whole of the file
+    has been checksum evaluated. Prints the CRC32 checksum to the terminal output, formatted 08x.
+  - md5_4096(filename): Opens the input file in bytes, splits the file into chunks and iterates through these (size 4096)
+    until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
+  - md5_65536(filename): Opens the input file in bytes, splits the file into chunks and iterates through these (size 65536)
+    until the hash file is completed. Prints the MD5 checksum, formatted hexdigest.
 5. Outputs to log the following data, tab separated:
-   Filepath     MD5/CRC32      Size in MB      Time taken in seconds       Python version
+   Filepath     MD5/CRC32 chunk size      Size in MB      Time taken in seconds       Python version
 
 
 ## test_checksum_speed_test.py
