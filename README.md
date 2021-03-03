@@ -9,23 +9,17 @@ There are two versions of the checksum_speed_test script that allow for single u
 Result from the tests, run on 8 thread Ubuntu VM with 12GB RAM and 10Gbps network connection - testing with files on two different network shares: CRC32 chunk size 65536 using Python 3 (3.6 installed) implementation is fastest, with MD5 chunk size 4096 Python 2 (2.7 installed) implementation slowest.
 
 #### Methodology | MB per Second
-##### Tests taken across a one week
 
-MD5 4096 Python2 | 224.778250340242
+Tests averaged across one week of repeat testing:
+MD5 4096 Python2 | 224.778250340242.
+MD5 65536 Python2 | 357.535889127455.
+MD5 4096 Python3 | 326.132731717776.
+MD5 65536 Python3 | 398.015125290373.
+CRC32 4096 Python2 | 265.358376013364.
+CRC32 65536 Python2 | 546.4826626438.
+CRC32 4096 Python3 | 348.466331006633.
+CRC32 65536 Python3 | 609.691086005532.
 
-MD5 65536 Python2 | 357.535889127455
-
-MD5 4096 Python3 | 326.132731717776
-
-MD5 65536 Python3 | 398.015125290373
-
-CRC32 4096 Python2 | 265.358376013364
-
-CRC32 65536 Python2 | 546.4826626438
-
-CRC32 4096 Python3 | 348.466331006633
-
-CRC32 65536 Python3 | 609.691086005532
 
 ## checksum_speed_test.py
 
