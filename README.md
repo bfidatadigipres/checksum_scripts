@@ -11,14 +11,14 @@ Result from the tests, run on 8 thread Ubuntu VM with 12GB RAM and 10Gbps networ
 #### Methodology | MB per Second
 
 Tests averaged across one week of repeat testing:
- - MD5 4096 Python2 | 224.778250340242.
- - MD5 65536 Python2 | 357.535889127455.
- - MD5 4096 Python3 | 326.132731717776.
- - MD5 65536 Python3 | 398.015125290373.
- - CRC32 4096 Python2 | 265.358376013364.
- - CRC32 65536 Python2 | 546.4826626438.
- - CRC32 4096 Python3 | 348.466331006633.
- - CRC32 65536 Python3 | 609.691086005532.
+ - MD5 4096 Python2 | 224.778250340242
+ - MD5 65536 Python2 | 357.535889127455
+ - MD5 4096 Python3 | 326.132731717776
+ - MD5 65536 Python3 | 398.015125290373
+ - CRC32 4096 Python2 | 265.358376013364
+ - CRC32 65536 Python2 | 546.4826626438
+ - CRC32 4096 Python3 | 348.466331006633
+ - CRC32 65536 Python3 | 609.691086005532
 
 
 ## checksum_speed_test.py
