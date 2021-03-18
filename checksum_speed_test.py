@@ -120,11 +120,11 @@ def main():
             print("It took {} seconds to retrieve the MD5 4096 hash".format(md5_time))
             print("Beginning the CRC32 65536 speed test checks for your file")
             # CRC32 Speed tests 65536 start here
-            crc_time = timeit.timeit(lambda: crc_65536(filepath), number=1)
+            crc2_time = timeit.timeit(lambda: crc_65536(filepath), number=1)
             print("It took {} seconds to retrieve the CRC32 65536 hash".format(crc2_time))
             print("Beginning the MD5 65536 speed test checks for your file")
             # MD5 Speed tests 65536 start here
-            md5_time = timeit.timeit(lambda: md5_65536(filepath), number=1)
+            md52_time = timeit.timeit(lambda: md5_65536(filepath), number=1)
             print("It took {} seconds to retrieve the MD5 65536 hash".format(md52_time))
             print("This data is being output to checksum_speed_test.log, in your working directory")
             logger.info("%s\t CRC32 4096\t %s\t %s\t Python <version>", filepath, size_mb, crc_time)
