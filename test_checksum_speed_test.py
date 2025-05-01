@@ -13,6 +13,11 @@ def test_crc_med():
     assert crc_check is None
 
 
+def test_not_crc_med():
+    crc_check = checksum_speed_test.crc_65536('/dummy_directory/no_file/')
+    assert crc_check is not None
+
+
 def test_crc_med2():
     crc_check = checksum_speed_test.crc_4096('')
     assert crc_check is None
