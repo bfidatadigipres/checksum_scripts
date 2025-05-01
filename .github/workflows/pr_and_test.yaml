@@ -1,0 +1,219 @@
+name: Lint and Update Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+        branches:
+          - main
+          - 'feature/**'
+          - 'fix/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  lint-and-pr:
+    runs-on: ubuntu-latest
+    steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
+         with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            fetch-depth: 0
+            # This ensures we check out the PR branch when running on a PR
+            ref: ${{ github.event.pull_request.head.ref || github.ref }}
+            # This handles forked PRs properly
+            repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+
+       - name: Install dependencies
+         run: |
+          if [ -f requirements.txt ]; then
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+            python -m pip install black isort pylint
+          else
+            echo "requirements.txt not found, skipping dependency installation."
+          fi
+
+       - name: Set branch info
+         id: vars
+         run: |
+           # If this is a PR event, use the PR branch
+           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+             echo "branch_name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+             echo "is_pr=true" >> $GITHUB_OUTPUT
+             echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+           else
+             # For push events, use the auto format branch
+             echo "branch_name=auto/format-branch" >> $GITHUB_OUTPUT
+             echo "is_pr=false" >> $GITHUB_OUTPUT
+           fi
+         
+       - name: Configure Git
+         run: |
+             git config --global user.name "github-actions[bot]"
+             git config --global user.email "github-actions[bot]@users.noreply.github.com"
+             
+       - name: Formatting code
+         run: |
+           python -m black *.py 
+           python -m isort *.py
+
+       - name: pylint output
+         run: |
+          mkdir -p reports
+          python -m pylint *.py > reports/pylint-report.txt || true
+
+       - name: Read pylint output into env variable
+         id: read-report
+         run: |
+           {
+             echo 'BODY<<EOF'
+             cat reports/pylint-report.txt
+             echo 'EOF'
+           } >> $GITHUB_OUTPUT
+
+       - name: Check if changes were made
+         id: check_changes
+         run: |
+           if git diff --name-only | grep -q '\.py$'; then
+             echo "changes_detected=true" >> $GITHUB_OUTPUT
+           else
+             echo "changes_detected=false" >> $GITHUB_OUTPUT
+           fi
+
+       # For PR events, commit changes directly to the PR branch
+       - name: Commit changes to PR branch
+         if: ${{ github.event_name == 'pull_request' && steps.check_changes.outputs.changes_detected == 'true' }}
+         run: |
+           git add .
+           git commit -m "chore(formatting): automated linting updates"
+           git push
+
+       # For push events, create/update the auto format branch and PR
+       - name: Handle auto-format for push events
+         if: ${{ github.event_name != 'pull_request' && steps.check_changes.outputs.changes_detected == 'true' }}
+         id: create_auto_pr
+         run: |
+             BRANCH_NAME="${{ steps.vars.outputs.branch_name }}"
+             
+             # Check if branch exists on remote
+             if git ls-remote --heads origin $BRANCH_NAME | grep -q $BRANCH_NAME; then
+               # Branch exists, fetch it first
+               git fetch origin $BRANCH_NAME
+               git checkout $BRANCH_NAME
+               git reset --hard origin/$BRANCH_NAME
+             else
+               # Create a new branch
+               git checkout -b "$BRANCH_NAME"
+             fi
+             
+             # Apply formatting changes
+             git checkout -- .
+             python -m black *.py 
+             python -m isort *.py
+             
+             # Add the changes
+             git add .
+             
+             # Check if there are changes to commit
+             if git diff --staged --quiet; then
+               echo "No changes to commit"
+               echo "changes_made=false" >> $GITHUB_OUTPUT
+             else
+               git commit -m "chore(formatting): automated linting updates"
+               git push -f origin "$BRANCH_NAME"
+               echo "changes_made=true" >> $GITHUB_OUTPUT
+             fi
+
+             # Check if PR already exists
+             PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --json number,state --jq '.[] | select(.state == "OPEN") | .number' | wc -l)
+             
+             if [ "$PR_EXISTS" -gt 0 ]; then
+               echo "Existing open PR found for branch $BRANCH_NAME"
+               echo "pr_exists=true" >> $GITHUB_OUTPUT
+               PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+               echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+             else
+               echo "No existing open PR found for branch $BRANCH_NAME"
+               echo "pr_exists=false" >> $GITHUB_OUTPUT
+             fi
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+       # Create or update the auto-format PR for push events
+       - name: Create or update auto-format PR
+         if: ${{ github.event_name != 'pull_request' && steps.create_auto_pr.outputs.changes_made == 'true' }}
+         run: |
+             BRANCH_NAME="${{ steps.vars.outputs.branch_name }}"
+             TIMESTAMP=$(date)
+             PR_BODY="This PR applies automatic code formatting using Black and isort 🧹.
+
+             ## Latest Pylint Report
+             *Updated: $TIMESTAMP*
+             
+             \`\`\`
+             ${{ steps.read-report.outputs.BODY }}
+             \`\`\`
+             "
+
+             if [ "${{ steps.create_auto_pr.outputs.pr_exists }}" == "true" ]; then
+               echo "Updating existing PR #${{ steps.create_auto_pr.outputs.pr_number }}"
+               # Update PR description
+               gh pr edit ${{ steps.create_auto_pr.outputs.pr_number }} --body "$PR_BODY"
+               # Add a comment about the update
+               gh pr comment ${{ steps.create_auto_pr.outputs.pr_number }} --body "Updated with latest formatting changes from ${{ github.ref_name }} on $TIMESTAMP."
+             else
+               echo "Creating new PR"
+               # Create the PR using GitHub CLI
+               gh pr create \
+                 --base main \
+                 --head "$BRANCH_NAME" \
+                 --title "Automated PR: Code Formatting" \
+                 --body "$PR_BODY"
+             fi
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+       # Update the PR with pylint information for PR events
+       - name: Update PR description with pylint info
+         if: ${{ github.event_name == 'pull_request' }}
+         run: |
+             TIMESTAMP=$(date)
+             PR_NUMBER="${{ github.event.pull_request.number }}"
+             
+             # Get current PR description
+             CURRENT_DESCRIPTION=$(gh pr view $PR_NUMBER --json body --jq '.body')
+             
+             # Check if it already has a pylint section
+             if echo "$CURRENT_DESCRIPTION" | grep -q "## Latest Pylint Report"; then
+               # Replace the existing pylint section
+               NEW_DESCRIPTION=$(echo "$CURRENT_DESCRIPTION" | sed 's/## Latest Pylint Report.*```/## Latest Pylint Report\n*Updated: '"$TIMESTAMP"'*\n\n```/')
+               NEW_DESCRIPTION=$(echo "$NEW_DESCRIPTION" | sed 's/```\n\n/```\n'"${{ steps.read-report.outputs.BODY }}"'\n\n/')
+             else
+               # Append pylint section to the description
+               PYLINT_SECTION="
+             
+             ## Latest Pylint Report
+             *Updated: $TIMESTAMP*
+             
+             \`\`\`
+             ${{ steps.read-report.outputs.BODY }}
+             \`\`\`
+             "
+               NEW_DESCRIPTION="${CURRENT_DESCRIPTION}${PYLINT_SECTION}"
+             fi
+             
+             # Update PR description
+             gh pr edit $PR_NUMBER --body "$NEW_DESCRIPTION"
+             
+             # Add a comment about the update if changes were made
+             if [ "${{ steps.check_changes.outputs.changes_detected }}" == "true" ]; then
+               gh pr comment $PR_NUMBER --body "Automated formatting applied and Pylint report updated on $TIMESTAMP."
+             else
+               gh pr comment $PR_NUMBER --body "Pylint report updated on $TIMESTAMP. No formatting changes were needed."
+             fi
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
