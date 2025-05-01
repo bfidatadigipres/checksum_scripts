@@ -13,9 +13,9 @@ repos:
     rev: 6.0.1
     hooks:
     -   id: isort
-# -   repo: https://github.com/pylint-dev/pylint
-#     rev: v3.1.0
-#     hooks:
-#     -   id: pylint
-#         language: python
-#         entry: pylint
+-   repo: https://github.com/pylint-dev/pylint
+    rev: v3.1.0
+    hooks:
+    -   id: pylint
+        language: python
+        entry: pylint
