@@ -84,7 +84,6 @@ jobs:
              echo "changes_detected=false" >> $GITHUB_OUTPUT
            fi
 
-       # For PR events, commit changes directly to the PR branch
        - name: Commit changes to PR branch
          if: ${{ github.event_name == 'pull_request' && steps.check_changes.outputs.changes_detected == 'true' }}
          run: |

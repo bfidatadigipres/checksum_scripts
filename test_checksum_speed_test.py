@@ -17,6 +17,10 @@ def test_crc_med2():
     crc_check = checksum_speed_test.crc_4096('')
     assert crc_check is None
 
+def test_not_crc_med2():
+    crc_check = checksum_speed_test.crc_4096('')
+    assert crc_check is not None
+
 
 def test_md5_easy():
     md5_check = checksum_speed_test.md5_65536('sample_file.mkv')
