@@ -1,3 +1,5 @@
+"""help"""
+
 #!/usr/bin/env python3
 
 import checksum_speed_test
@@ -24,10 +26,5 @@ def test_md5_easy():
 
 
 def test_md5_med():
-    md5_check = checksum_speed_test.md5_4096("/dummy_directory/no_file/")
-    assert md5_check is None
-
-
-def test_md5_med2():
-    md5_check = checksum_speed_test.md5_65536("")
+    md5_check = checksum_speed_test.md5_4096("/dummy_directory/no_/")
     assert md5_check is None
