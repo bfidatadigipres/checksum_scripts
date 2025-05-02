@@ -59,7 +59,7 @@ jobs:
 
       - name: Check if PR exists
         id: check-pr
-        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+        if: github.event_name == 'push'
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
           PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
