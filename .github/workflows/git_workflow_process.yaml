@@ -75,7 +75,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR
-        if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push'
+        if: steps.check-pr.outputs.create_pr == 'true' && steps.check-changes.outputs.changes == 'true' && github.event_name == 'push'
         run: |
               echo "Creating PR"
               gh pr create \

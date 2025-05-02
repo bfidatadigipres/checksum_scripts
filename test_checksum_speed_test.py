@@ -31,5 +31,5 @@ def test_md5_med():
 
 
 def test_md5_med2():
-    md5_check = checksum_speed_test.md5_65536("jfbjksebjkbdfjk")
+    md5_check = checksum_speed_test.md5_65536("jfbdjskbfusbfuiebsducfbdiusbua")
     assert md5_check is None
