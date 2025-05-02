@@ -1,3 +1,5 @@
+"""help"""
+
 #!/usr/bin/env python3
 
 import checksum_speed_test
