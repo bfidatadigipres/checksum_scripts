@@ -165,7 +165,9 @@ jobs:
           id: save_report
           run: |
             pylint_report=$(cat reports/pylint-report.txt)
-            echo "pylint_report=$pylint_report" >> $GITHUB_ENV
+            echo "pylint_report<<EOF" >> $GITHUB_ENV
+            echo "$pylint_report" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
     
         - name: Comment on PR with Full Pylint Report
           if: steps.check-pr.outputs.exists == 'true'
