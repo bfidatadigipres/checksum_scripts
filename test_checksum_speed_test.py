@@ -28,3 +28,8 @@ def test_md5_easy():
 def test_md5_med():
     md5_check = checksum_speed_test.md5_4096("/dummy_directory/no_/")
     assert md5_check is None
+
+
+def test_md5_med_btoken():
+    md5_check = checksum_speed_test.md5_4096(".....")
+    assert md5_check is None
