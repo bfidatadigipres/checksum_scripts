@@ -169,5 +169,6 @@ jobs:
             issue-number: ${{ steps.check-pr.outputs.number }}
             body-file: reports/pylint-report.txt
             edit-mode: replace
+            repository: bfidatadigipres/checksum_scripts
         env:
             GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
