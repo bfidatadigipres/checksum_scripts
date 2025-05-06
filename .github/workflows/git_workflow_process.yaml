@@ -68,19 +68,22 @@ jobs:
         run: |
             BRANCH_NAME="${{ github.ref_name || github.ref}}"
             echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
-
-              # Query the GitHub API to check for existing PRs
-              PR_EXISTS=$(gh pr list \
-                  --repo "bfidatadigipres/checksum_scripts" \
-                  --head "${{ github.repository_owner }}:${BRANCH_NAME}" \
-                  --base main \
-                  --state open \
-                  --json number \
-                  --jq 'length' || echo "error")
-
-            echo "Number of existing PRs: $PR_EXISTS"
-
-            if [ "$PR_EXISTS" -gt 0 ]; then
+            
+            # Query the GitHub API to check for existing PRs
+            PR_EXISTS=$(gh pr list \
+                --repo "bfidatadigipres/checksum_scripts" \
+                --head "${{ github.repository_owner }}:${BRANCH_NAME}" \
+                --base main \
+                --state open \
+                --json number \
+                --jq 'length' 2>/dev/null || echo "error")
+        
+            echo "PR_EXISTS raw value: $PR_EXISTS"
+        
+            if [ "$PR_EXISTS" = "error" ]; then
+              echo "Error querying GitHub API — assuming no PR exists"
+              echo "create_pr=true" >> $GITHUB_OUTPUT
+            elif [ "$PR_EXISTS" -gt 0 ]; then
               echo "PR for branch $BRANCH_NAME already exists"
               echo "create_pr=false" >> $GITHUB_OUTPUT
             else
@@ -89,6 +92,7 @@ jobs:
             fi
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Create PR
         if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
