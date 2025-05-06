@@ -75,7 +75,7 @@ jobs:
                   --base main \
                   --state open \
                   --json number \
-                  --jq 'length')
+                  --jq 'length' || echo "error")
 
             echo "Number of existing PRs: $PR_EXISTS"
 
