@@ -135,8 +135,22 @@ jobs:
           name: pylint-report
           path: reports/pylint-report.txt
 
+      - name: Check if PR exists
+        id: check-pr
+        run: |
+            gh pr list --head "$GITHUB_REF_NAME" --json number -q '.[0].number' > pr_number.txt || echo ""
+            PR_NUMBER=$(cat pr_number.txt)
+            if [ -n "$PR_NUMBER" ]; then
+              echo "exists=true" >> $GITHUB_OUTPUT
+              echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            else
+              echo "exists=false" >> $GITHUB_OUTPUT
+            fi
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
+        if: steps.check-pr.outputs.exists == 'true'
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
