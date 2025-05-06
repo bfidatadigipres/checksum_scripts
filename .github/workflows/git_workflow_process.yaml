@@ -131,4 +131,4 @@ jobs:
                 echo "No pylint report found, skipping comment."
               fi
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN||secrets.GITHUB_TOKEN }}
