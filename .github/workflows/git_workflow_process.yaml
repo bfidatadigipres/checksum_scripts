@@ -21,10 +21,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli.repo | sudo tee /etc/apt/sources.list.d/github-cli.list
+          sudo apt update
+          sudo apt install gh
+
       - name: Setup Git
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
+
       - name: Run Black (format instead of check)
         uses: psf/black@stable
         with:
@@ -47,22 +54,24 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "No formatting changes needed"
           fi
+
       - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true'
         run: |
-          git pull
+          git fetch origin
+          git checkout ${{ github.ref_name }}
+          git merge origin/${{ github.ref_name }} --no-edit || true
           git add .
-          git commit -m "Apply automatic formatting with Black and isort"
+          git commit -m "Apply automatic formatting with Black and isort" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Check if PR exists
         id: check-pr
-        if: github.event_name == 'push'
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
-          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
+          PR_EXISTS=$(curl -s "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:${BRANCH_NAME}&base=main" | jq 'length')
           if [ "$PR_EXISTS" -gt 0 ]; then
             echo "PR for branch $BRANCH_NAME already exists"
             echo "create_pr=false" >> $GITHUB_OUTPUT
@@ -70,18 +79,16 @@ jobs:
             echo "No PR exists for branch $BRANCH_NAME, creating the branch"
             echo "create_pr=true" >> $GITHUB_OUTPUT
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Create PR
-        if: steps.check-changes.outputs.changes == 'true' && steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push'
+        if: steps.check-pr.outputs.create_pr == 'true'
         run: |
-              echo "Creating PR"
-              gh pr create \
-                --base main \
-                --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
-                --title "This PR was automatically created from branch: ${{ github.head_ref || github.ref_name }}" \
-                --body "New PR request"
+          echo "Creating PR"
+          gh pr create \
+            --base main \
+            --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
+            --title "This PR was automatically created from branch: ${{ github.ref_name }}" \
+            --body "New PR request"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,36 +97,39 @@ jobs:
     needs:
       - format-code-and-create-pr
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          fetch-depth: 0
 
-        - name: Checkout Code
-          uses: actions/checkout@v4
-          with:
-            ref: ${{ github.head_ref || github.ref }}
-            fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-        - name: Setup Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.12'
+      - name: Install Pylint
+        run: pip install pylint pytest
 
-        - name: Install Pylint
-          run: pip install pylint pytest
+      - name: Generate Pylint report
+        id: pylint
+        run: |
+          mkdir -p reports
+          python -m pylint *.py > reports/pylint-report.txt || true
 
-        - name: Generate Pylint report
-          id: pylint
-          run: |
-            mkdir -p reports
-            python -m pylint *.py > reports/pylint-report.txt || true
-        - name: Upload report
-          uses: actions/upload-artifact@v4
-          with:
-            name: pylint-report
-            path: reports/pylint-report.txt
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pylint-report
+          path: reports/pylint-report.txt
 
-        - name: Comment on PR
-          if: github.event_name == 'pull_request'
-          uses: peter-evans/create-or-update-comment@v4
-          with:
-            issue-number: ${{ github.event.pull_request.number }}
-            body-file: reports/pylint-report.txt
-            edit-mode: replace
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ### Pylint Report:
+            ```txt
+            $(cat reports/pylint-report.txt)
+            ```
