@@ -55,41 +55,31 @@ def test_md5_med6():
     assert md5_check is None
 
 
-def test_md5_med7():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
-def test_md5_med9():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
-def test_md5_med19():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
-def test_md5_med21():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
-def test_md5_med20():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
-def test_md5_med72():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
 def test_md5_med24():
     md5_check = checksum_speed_test.md5_65536("")
     assert md5_check is None
 
 
 def test_md5_med60():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None
+
+
+def test_md5_med62():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None
+
+
+def test_md5_med628hh9():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None
+
+
+def test_md5_med8888():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None
+
+
+def test_md5_med8899():
     md5_check = checksum_speed_test.md5_65536("")
     assert md5_check is None
