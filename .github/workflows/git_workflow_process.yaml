@@ -65,31 +65,31 @@ jobs:
         id: check-pr
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
-          BRANCH_NAME="${{ github.ref_name || github.ref}}"
-          echo "Current branch: $BRANCH_NAME"
-          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
-          echo "Number of existing PRs: $PR_EXISTS"
+            BRANCH_NAME="${{ github.ref_name || github.ref}}"
+            echo "Current branch: $BRANCH_NAME"
+            PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
+            echo "Number of existing PRs: $PR_EXISTS"
 
-          if [ "$PR_EXISTS" -gt 0 ]; then
-            echo "PR for branch $BRANCH_NAME already exists"
-            echo "create_pr=false" >> $GITHUB_OUTPUT
-          else
-            echo "No PR exists for branch $BRANCH_NAME"
-            echo "create_pr=true" >> $GITHUB_OUTPUT
-          fi
+            if [ "$PR_EXISTS" -gt 0 ]; then
+              echo "PR for branch $BRANCH_NAME already exists"
+              echo "create_pr=false" >> $GITHUB_OUTPUT
+            else
+              echo "No PR exists for branch $BRANCH_NAME"
+              echo "create_pr=true" >> $GITHUB_OUTPUT
+            fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR
         if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
-            echo "Creating PR for branch ${{ github.ref_name }}"
-            gh pr create \
-              --repo "bfidatadigipres/checksum_scripts" \
-              --base main \
-              --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
-              --title "Automated PR for branch: ${{ github.ref_name }}" \
-              --body "This PR was automatically created from branch: ${{ github.ref_name }}"
+              echo "Creating PR for branch ${{ github.ref_name }}"
+              gh pr create \
+                --repo "SaabriinMo/checksum_scripts" \
+                --base main \
+                --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
+                --title "Automated PR for branch: ${{ github.ref_name }}" \
+                --body "This PR was automatically created from branch: ${{ github.ref_name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
