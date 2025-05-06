@@ -65,8 +65,9 @@ jobs:
         if: github.event_name == 'push'
         run: |
             BRANCH_NAME="${{ github.ref_name }}"
+            echo "Checking if a PR exists from ${BRANCH_NAME} to main"
 
-            # Check if a PR already exists from the forked branch to the main branch of the upstream repository
+            # Check if a PR already exists from your forked branch to the main branch of the upstream repository
             PR_EXISTS=$(gh pr list --repo bfidatadigipres/checksum_scripts --head "${{ github.repository_owner }}:$BRANCH_NAME" --base main --json number --jq 'length')
 
             if [ "$PR_EXISTS" -gt 0 ]; then
@@ -80,7 +81,7 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR
-        if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main' && github.event_name == 'push'
+        if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main'
         run: |
             echo "Creating PR..."
             gh pr create \
@@ -91,11 +92,6 @@ jobs:
               --body "This PR was automatically created from forked repo changes."
         env:
             GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-      - name: Skip PR Creation if Exists
-        if: steps.check-pr.outputs.create_pr == 'false'
-        run: |
-            echo "Skipping PR creation because it already exists."
 
   lint:
     runs-on: ubuntu-latest
