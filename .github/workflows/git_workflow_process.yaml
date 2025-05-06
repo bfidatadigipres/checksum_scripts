@@ -84,7 +84,7 @@ jobs:
               --base main \
               --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
               --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
-              --body "This PR was automatically created from forked repo changes."
+              --body "This PR was automatically created from forked repo changes." || echo "PR already exists, skipping PR creation
         env:
             GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
@@ -121,8 +121,14 @@ jobs:
 
         - name: Comment on PR
           if: github.event_name == 'pull_request'
-          uses: peter-evans/create-or-update-comment@v4
-          with:
-            issue-number: ${{ github.event.pull_request.number }}
-            body-file: reports/pylint-report.txt
-            edit-mode: replace
+          run: |
+              if [[ -f reports/pylint-report.txt ]]; then
+                echo "Uploading Pylint report to PR"
+                PR_NUMBER="${{ github.event.pull_request.number }}"
+                COMMENT_BODY=$(cat reports/pylint-report.txt)
+                gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"  # Use GitHub CLI to add comment to PR
+              else
+                echo "No pylint report found, skipping comment."
+              fi
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
