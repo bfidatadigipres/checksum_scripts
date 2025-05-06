@@ -64,33 +64,31 @@ jobs:
         id: check-pr
         if: github.event_name == 'push'
         run: |
-            echo "Checking for PR from fork..."
             BRANCH_NAME="${{ github.ref_name }}"
-            echo "Branch: $BRANCH_NAME"
 
-            # Check if PR already exists
-            PR_EXISTS=$(gh pr list --repo bfidatadigipres/checksum_scripts --head "${{ github.repository_owner }}:$BRANCH_NAME" --base main --json number --jq 'length' || echo 0)
-            echo "Found $PR_EXISTS PR(s)"
+            # Check if a PR already exists from the forked branch to the main branch of the upstream repository
+            PR_EXISTS=$(gh pr list --repo bfidatadigipres/checksum_scripts --head "${{ github.repository_owner }}:$BRANCH_NAME" --base main --json number --jq 'length')
 
             if [ "$PR_EXISTS" -gt 0 ]; then
-              echo "PR already exists"
+              echo "PR for branch $BRANCH_NAME already exists"
               echo "create_pr=false" >> $GITHUB_OUTPUT
             else
-              echo "No PR exists, will create one"
+              echo "No PR exists for branch $BRANCH_NAME, creating the PR"
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create PR
         if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main' && github.event_name == 'push'
         run: |
-              echo "Creating PR..."
-              gh pr create \
-                --repo bfidatadigipres/checksum_scripts \
-                --base main \
-                --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
-                --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
-                --body "This PR was automatically created from forked repo changes."
+            echo "Creating PR..."
+            gh pr create \
+              --repo bfidatadigipres/checksum_scripts \
+              --base main \
+              --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
+              --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
+              --body "This PR was automatically created from forked repo changes."
         env:
             GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
