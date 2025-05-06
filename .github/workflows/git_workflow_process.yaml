@@ -67,7 +67,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
           echo "Current branch: $BRANCH_NAME"
-          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')          e
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
           echo "Number of existing PRs: $PR_EXISTS"
 
           if [ "$PR_EXISTS" -gt 0 ]; then
