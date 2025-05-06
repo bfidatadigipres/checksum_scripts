@@ -120,7 +120,7 @@ jobs:
             path: reports/pylint-report.txt
 
         - name: Comment on PR
-          if: github.event_name == 'pull_request'
+          if: github.event_name == 'pull_request' || github.event_name == 'push'
           run: |
               if [[ -f reports/pylint-report.txt ]]; then
                 echo "Uploading Pylint report to PR"
