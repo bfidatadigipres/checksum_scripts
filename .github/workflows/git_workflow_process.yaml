@@ -4,11 +4,13 @@ on:
   push:
     branches: ['*']
   pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write  # Changed to write to allow pushing changes
   pull-requests: write
   id-token: write
+  issues: write
 
 jobs:
   format-and-create-pr:
