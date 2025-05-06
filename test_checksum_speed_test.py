@@ -103,3 +103,13 @@ def test_md5_med32():
 def test_md5_med34():
     md5_check = checksum_speed_test.md5_65536("")
     assert md5_check is None
+
+
+def test_md5_med36():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None
+
+
+def test_md5_med38():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None

@@ -36,7 +36,7 @@ jobs:
         with:
           requirements-files: ""
           sort-paths: "."
-          configuration: "--profile black --apply"
+          configuration: "--profile black"
 
       - name: Check for formatting changes
         id: check-changes
@@ -77,7 +77,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Create PR
-        if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push'
+        if: steps.check-changes.outputs.changes == 'true' && steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push'
         run: |
               echo "Creating PR"
               gh pr create \
