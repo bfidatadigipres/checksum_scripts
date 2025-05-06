@@ -14,11 +14,17 @@ jobs:
   format-and-create-pr:
     runs-on: ubuntu-latest
     steps:
+      - name: Debug Branch Info
+        run: |
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.head_ref: ${{ github.head_ref }}"
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Get full history
+
 
       - name: Setup Git
         run: |
