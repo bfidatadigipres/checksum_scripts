@@ -73,7 +73,7 @@ jobs:
                 "https://api.github.com/repos/datadigipres/checksum_scripts/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main" \
                 | jq 'length')
 
-            echo "API response: $PR_EXISTS"
+            echo "API response: $PR_EXISTS""
 
             if [ "$PR_EXISTS" -gt 0 ]; then
               echo "PR for branch $BRANCH_NAME already exists"
