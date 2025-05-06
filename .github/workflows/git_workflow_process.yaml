@@ -17,7 +17,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.head_ref || github.ref }}
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -66,6 +66,7 @@ jobs:
           git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
 
       - name: Check if PR exists
         id: check-pr
@@ -133,3 +134,4 @@ jobs:
             ```txt
             $(cat reports/pylint-report.txt)
             ```
+
