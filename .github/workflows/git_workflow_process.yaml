@@ -70,7 +70,7 @@ jobs:
 
               # Query the GitHub API to check for existing PRs
               PR_EXISTS=$(gh pr list \
-                  --repo "datadigipres/checksum_scripts" \
+                  --repo "bfidatadigipres/checksum_scripts" \
                   --head "${{ github.repository_owner }}:${BRANCH_NAME}" \
                   --base main \
                   --state open \
@@ -94,7 +94,7 @@ jobs:
         run: |
               echo "Creating PR for branch ${{ github.ref_name }}"
               gh pr create \
-                --repo "datadigipres/checksum_scripts" \
+                --repo "bfidatadigipres/checksum_scripts" \
                 --base main \
                 --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
