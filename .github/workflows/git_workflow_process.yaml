@@ -84,7 +84,7 @@ jobs:
               --base main \
               --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
               --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
-              --body "This PR was automatically created from forked repo changes." || echo "PR already exists, skipping PR creation
+              --body "This PR was automatically created from forked repo changes." || echo "PR already exists, skipping PR creation"
         env:
             GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
