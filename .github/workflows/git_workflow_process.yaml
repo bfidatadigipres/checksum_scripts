@@ -86,7 +86,7 @@ jobs:
               --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
               --body "This PR was automatically created from forked repo changes."
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || secrets.PERSONAL_ACCESS_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
   lint:
     runs-on: ubuntu-latest
