@@ -172,7 +172,6 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
             issue-number: ${{ steps.check-pr.outputs.number }}
-            body-file: reports/pylint-report.txt
             edit-mode: replace
             repository: bfidatadigipres/checksum_scripts
             body: |
