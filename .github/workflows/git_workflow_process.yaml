@@ -4,7 +4,6 @@ on:
   push:
     branches: ['*']
   pull_request:
-    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write  # Changed to write to allow pushing changes
@@ -93,7 +92,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}}
 
 
       - name: Create PR
