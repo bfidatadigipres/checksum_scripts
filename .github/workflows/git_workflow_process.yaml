@@ -148,7 +148,7 @@ jobs:
         - name: Check if PR exists
           id: check-pr
           env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
           run: |
             BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
             echo "Checking for PR on branch: $BRANCH_NAME"
