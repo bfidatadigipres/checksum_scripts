@@ -69,12 +69,14 @@ jobs:
             echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
 
               # Query the GitHub API to check for existing PRs
-              PR_RESPONSE=$(curl -s \
-                  -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-                  "https://api.github.com/repos/$TARGET_REPO/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main&state=open")
+              PR_EXISTS=$(gh pr list \
+                  --repo "datadigipres/checksum_scripts" \
+                  --head "${{ github.repository_owner }}:${BRANCH_NAME}" \
+                  --base main \
+                  --state open \
+                  --json number \
+                  --jq 'length')
 
-            # Check number of open PRs
-            PR_EXISTS=$(echo "$PR_RESPONSE" | jq 'length')
             echo "Number of existing PRs: $PR_EXISTS"
 
             if [ "$PR_EXISTS" -gt 0 ]; then
