@@ -100,16 +100,6 @@ def test_md5_med8899():
     assert md5_check is None
 
 
-def test_md5_med5m():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
-def test_md5_med5hm():
-    md5_check = checksum_speed_test.md5_65536("")
-    assert md5_check is None
-
-
 def test_md5___():
     md5_check = checksum_speed_test.md5_65536("")
     assert md5_check is None

@@ -2,7 +2,7 @@ name: Automated Git Workflow used by developers
 
 on:
   push:
-    branches: ['*']  # Trigger on all branches
+    branches: ['*']
   pull_request:
 
 permissions:
@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.head_ref || github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -25,7 +25,6 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-
       - name: Run Black (format instead of check)
         uses: psf/black@stable
         with:
@@ -48,57 +47,54 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "No formatting changes needed"
           fi
-
-      - name: Commit changes back to forked branch
+      - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true'
         run: |
+          git pull
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push origin HEAD:${{ github.ref_name }}  # Push changes to the forked repository
+          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use GITHUB_TOKEN for pushing to the fork
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Check if PR exists
         id: check-pr
         if: github.event_name == 'push'
         run: |
-            BRANCH_NAME="${{ github.ref_name }}"
-            PR_EXISTS=$(gh pr list --repo bfidatadigipres/checksum_scripts --head "${{ github.repository_owner }}:$BRANCH_NAME" --base main --json number --jq 'length')
-
-            if [ "$PR_EXISTS" -gt 0 ]; then
-              echo "PR for branch $BRANCH_NAME already exists"
-              echo "create_pr=false" >> $GITHUB_OUTPUT
-            else
-              echo "No PR exists for branch $BRANCH_NAME, creating the PR"
-              echo "create_pr=true" >> $GITHUB_OUTPUT
-            fi
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create PR
-        if: steps.check-pr.outputs.create_pr == 'true'
-        run: |
-          echo "Creating PR..."
-          gh pr create \
-            --repo bfidatadigipres/checksum_scripts \
-            --base main \
-            --head "${{ github.ref_name }}" \
-            --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
-            --body "This PR was automatically created from forked repo changes." || echo "PR already exists, skipping PR creation"
+          BRANCH_NAME="${{ github.ref_name }}"
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
+          if [ "$PR_EXISTS" -gt 0 ]; then
+            echo "PR for branch $BRANCH_NAME already exists"
+            echo "create_pr=false" >> $GITHUB_OUTPUT
+          else
+            echo "No PR exists for branch $BRANCH_NAME, creating the branch"
+            echo "create_pr=true" >> $GITHUB_OUTPUT
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - name: Create PR
+        if: steps.check-changes.outputs.changes == 'true' && steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push'
+        run: |
+              echo "Creating PR"
+              gh pr create \
+                --base main \
+                --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
+                --title "This PR was automatically created from branch: ${{ github.head_ref || github.ref_name }}" \
+                --body "New PR request"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
     runs-on: ubuntu-latest
     needs:
       - format-code-and-create-pr
     steps:
+
         - name: Checkout Code
           uses: actions/checkout@v4
           with:
-            ref: ${{ github.ref || 'refs/heads/main' }}
-            token: ${{ secrets.GITHUB_TOKEN }}
+            ref: ${{ github.head_ref || github.ref }}
             fetch-depth: 0
 
         - name: Setup Python
@@ -114,31 +110,16 @@ jobs:
           run: |
             mkdir -p reports
             python -m pylint *.py > reports/pylint-report.txt || true
-
         - name: Upload report
           uses: actions/upload-artifact@v4
           with:
             name: pylint-report
             path: reports/pylint-report.txt
 
-        - name: Find or Comment on PR
+        - name: Comment on PR
           if: github.event_name == 'pull_request'
-          run: |
-                echo "Finding PR for branch '${{ github.ref_name }}'..."
-
-                PR_NUMBER=$(gh pr list \
-                  --repo bfidatadigipres/checksum_scripts \
-                  --head "${{ github.ref_name }}" \
-                  --base main \
-                  --json number \
-                  --jq '.[0].number')
-
-                if [[ -z "$PR_NUMBER" ]]; then
-                  echo "No PR found for branch '${{ github.ref_name }}'. Skipping comment."
-                  exit 0
-                fi
-
-                echo "Commenting on PR #$PR_NUMBER..."
-                gh pr comment "$PR_NUMBER" --body "$(cat reports/pylint-report.txt)"
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          uses: peter-evans/create-or-update-comment@v4
+          with:
+            issue-number: ${{ github.event.pull_request.number }}
+            body-file: reports/pylint-report.txt
+            edit-mode: replace
