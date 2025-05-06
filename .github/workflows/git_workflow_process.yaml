@@ -67,8 +67,11 @@ jobs:
         run: |
             BRANCH_NAME="${{ github.ref_name || github.ref}}"
             echo "Current branch: $BRANCH_NAME"
-            PR_EXISTS=$(curl -s "https://api.github.com/repos/datadigipres/checksum_scripts/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main" | jq 'length')
-
+            PR_EXISTS=$(curl -s \
+                          "https://api.github.com/repos/datadigipres/checksum_scripts/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main" \
+                          | jq 'length')
+            echo "Number of existing PRs: $PR_EXISTS"
+            echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
             echo "Number of existing PRs: $PR_EXISTS"
 
             if [ "$PR_EXISTS" -gt 0 ]; then
