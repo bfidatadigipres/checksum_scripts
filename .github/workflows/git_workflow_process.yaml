@@ -119,16 +119,18 @@ jobs:
             name: pylint-report
             path: reports/pylint-report.txt
 
-        - name: Comment on PR
+        - name: Find or Comment on PR
           if: github.event_name == 'pull_request' || github.event_name == 'push'
           run: |
-              if [[ -f reports/pylint-report.txt ]]; then
-                echo "Uploading Pylint report to PR"
-                PR_NUMBER="${{ github.event.pull_request.number }}"
-                COMMENT_BODY=$(cat reports/pylint-report.txt)
-                gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"  # Use GitHub CLI to add comment to PR
-              else
-                echo "No pylint report found, skipping comment."
+              echo "Finding PR for branch '${{ github.ref_name }}'..."
+              PR_NUMBER=$(gh pr list --repo "${{ github.repository }}" --head "${{ github.repository_owner }}:${{ github.ref_name }}" --json number --jq '.[0].number')
+
+              if [[ -z "$PR_NUMBER" ]]; then
+                echo "No PR found for branch '${{ github.ref_name }}'. Skipping comment."
+                exit 0
               fi
+
+              echo "Commenting on PR #$PR_NUMBER..."
+              gh pr comment "$PR_NUMBER" --body "$(cat reports/pylint-report.txt)"
           env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN||secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
