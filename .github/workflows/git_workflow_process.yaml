@@ -55,7 +55,8 @@ jobs:
           git pull
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+          git remote set-url origin https://github.com/${{ github.repository_owner }}/checksum_scripts.git
+          git push origin ${{ github.head_ref || github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
