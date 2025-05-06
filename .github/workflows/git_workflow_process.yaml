@@ -60,7 +60,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      # Step to Check if PR Exists
       - name: Check if PR exists
         id: check-pr
         if: github.event_name == 'push'
@@ -80,61 +79,20 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        # Step to Create PR
       - name: Create PR
         if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main' && github.event_name == 'push'
         run: |
-              echo "Creating PR..."
-              gh pr create \
-                --base main \
-                --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
-                --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
-                --body "This PR was automatically created from forked repo changes."
+            echo "Creating PR..."
+            gh pr create \
+              --repo bfidatadigipres/checksum_scripts \
+              --base main \
+              --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
+              --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
+              --body "This PR was automatically created from forked repo changes."
         env:
             GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-        # Skip PR Creation if Exists
       - name: Skip PR Creation if Exists
         if: steps.check-pr.outputs.create_pr == 'false'
         run: |
-              echo "Skipping PR creation because it already exists."
-
-  lint:
-    runs-on: ubuntu-latest
-    needs:
-      - format-code-and-create-pr
-    steps:
-
-        - name: Checkout Code
-          uses: actions/checkout@v4
-          with:
-            ref: ${{ github.head_ref || github.ref }}
-            fetch-depth: 0
-
-        - name: Setup Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.12'
-
-        - name: Install Pylint
-          run: pip install pylint pytest
-
-        - name: Generate Pylint report
-          id: pylint
-          run: |
-            mkdir -p reports
-            python -m pylint *.py > reports/pylint-report.txt || true
-
-        - name: Upload report
-          uses: actions/upload-artifact@v4
-          with:
-            name: pylint-report
-            path: reports/pylint-report.txt
-
-        - name: Comment on PR
-          if: github.event_name == 'pull_request'
-          uses: peter-evans/create-or-update-comment@v4
-          with:
-            issue-number: ${{ github.event.pull_request.number }}
-            body-file: reports/pylint-report.txt
-            edit-mode: replace
+            echo "Skipping PR creation because it already exists."
