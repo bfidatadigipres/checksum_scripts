@@ -41,7 +41,7 @@ jobs:
         with:
           requirements-files: ""
           sort-paths: "."
-          configuration: "--profile black --apply"
+          configuration: "--profile black"
 
       - name: Check for formatting changes
         id: check-changes
