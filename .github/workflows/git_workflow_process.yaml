@@ -138,7 +138,7 @@ jobs:
       - name: Check if PR exists
         id: check-pr
         run: |
-            gh pr list --head "$GITHUB_REF_NAME" --json number -q '.[0].number' > pr_number.txt || echo ""
+            gh pr list --head "${{ github.head_ref || github.ref_name }}" --json number -q '.[0].number' > pr_number.txt || echo ""
             PR_NUMBER=$(cat pr_number.txt)
             if [ -n "$PR_NUMBER" ]; then
               echo "exists=true" >> $GITHUB_OUTPUT
@@ -147,14 +147,14 @@ jobs:
               echo "exists=false" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment on PR
         if: steps.check-pr.outputs.exists == 'true'
         uses: peter-evans/create-or-update-comment@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-file: reports/pylint-report.txt
-          edit-mode: replace
+            issue-number: ${{ steps.check-pr.outputs.number }}
+            body-file: reports/pylint-report.txt
+            edit-mode: replace
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
