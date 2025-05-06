@@ -56,7 +56,7 @@ jobs:
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
           git remote set-url origin https://github.com/${{ github.repository_owner }}/checksum_scripts.git
-          git push origin ${{ github.head_ref || github.ref_name }}
+          git push origin HEAD
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
