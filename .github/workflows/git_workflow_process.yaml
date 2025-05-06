@@ -70,7 +70,7 @@ jobs:
 
               # Query the GitHub API to check for existing PRs
             PR_EXISTS=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN}}" \
             "https://api.github.com/repos/datadigipres/checksum_scripts/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main" \
             | jq 'length')
 
