@@ -110,85 +110,79 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
   lint:
-    runs-on: ubuntu-latest
-    needs: format-and-create-pr
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref }}
-          fetch-depth: 0
-
-      - run: git pull
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - run: pip install pylint
-
-      - id: pylint
-        run: |
-          mkdir -p reports
-          python -m pylint *.py > reports/pylint-report.txt || true
-          sed -i 's/E:.*/🚨 &/' reports/pylint-report.txt
-          sed -i 's/W:.*/⚠️ &/' reports/pylint-report.txt
-          sed -i 's/I:.*/ℹ️ &/' reports/pylint-report.txt
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: pylint-report
-          path: reports/pylint-report.txt
+      runs-on: ubuntu-latest
+      needs: format-and-create-pr
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ github.head_ref || github.ref }}
+            fetch-depth: 0
     
-      - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        - run: git pull
     
-      - name: Check if PR exists
-        id: check-pr
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
-          echo "Checking for PR on branch: $BRANCH_NAME"
-          
-          PR_NUMBER=$(gh pr list \
-                --repo "bfidatidigipres/checksum_scripts" \
-                --head "${BRANCH_NAME}" \
-                --base main \
-                --state open \
-                --json number \
-                --jq '.[0].number' 2>/dev/null || echo "error")
-                
-          echo "Found PR number: $PR_NUMBER"
-          if [  "$PR_NUMBER" != "error" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
     
-      - name: Save Pylint report content to a variable
-        id: save_report
-        run: |
-          pylint_report=$(cat reports/pylint-report.txt)
-          pylint_report_cleaned=$(echo "$pylint_report" | sed 's/[^a-zA-Z0-9 ]//g' | tr -d '\n')
-          echo "pylint_report=$pylint_report" >> $GITHUB_ENV
+        - run: pip install pylint
     
-      - name: Comment on PR
-        if: steps.check-pr.outputs.exists == 'true'
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ steps.check-pr.outputs.number }}
-          edit-mode: replace
-          repository: bfidatadigipres/checksum_scripts
-          body: |
-            **Automated Pylint Report** 🧑‍💻
-  
-            Here is the **formatted** Pylint report:
-  
-            ```plaintext
-            ${{ env.pylint_report }}
-            ```
-  
-            **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        - id: pylint
+          run: |
+            mkdir -p reports
+            python -m pylint *.py > reports/pylint-report.txt || true
+            sed -i 's/E:.*/🚨 &/' reports/pylint-report.txt
+            sed -i 's/W:.*/⚠️ &/' reports/pylint-report.txt
+            sed -i 's/I:.*/ℹ️ &/' reports/pylint-report.txt
+        
+        - name: Authenticate GitHub CLI
+          run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+    
+        - name: Check if PR exists
+          id: check-pr
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+            echo "Checking for PR on branch: $BRANCH_NAME"
+            
+            PR_NUMBER=$(gh pr list \
+                  --repo "bfidatidigipres/checksum_scripts" \
+                  --head "${BRANCH_NAME}" \
+                  --base main \
+                  --state open \
+                  --json number \
+                  --jq '.[0].number' 2>/dev/null || echo "error")
+                  
+            echo "Found PR number: $PR_NUMBER"
+            if [  "$PR_NUMBER" != "error" ]; then
+              echo "exists=true" >> $GITHUB_OUTPUT
+              echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            else
+              echo "exists=false" >> $GITHUB_OUTPUT
+            fi
+    
+        - name: Save Pylint report to a variable
+          id: save_report
+          run: |
+            pylint_report=$(cat reports/pylint-report.txt)
+            echo "pylint_report=$pylint_report" >> $GITHUB_ENV
+    
+        - name: Comment on PR with Full Pylint Report
+          if: steps.check-pr.outputs.exists == 'true'
+          uses: peter-evans/create-or-update-comment@v4
+          with:
+            issue-number: ${{ steps.check-pr.outputs.number }}
+            edit-mode: replace
+            repository: bfidatidigipres/checksum_scripts
+            body: |
+              **Automated Pylint Report** 🧑‍💻
+    
+              Here is the **formatted** Pylint report:
+    
+              ```plaintext
+              ${{ env.pylint_report }}
+              ```
+    
+              **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
+            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    
