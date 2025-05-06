@@ -144,9 +144,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
-          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number -q '.[0].number' || echo "")
+          echo "Checking for PR on branch: $BRANCH_NAME"
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number -q '.[-1].number' || echo "") 
           echo "Found PR number: $PR_NUMBER"
-          if [ -n "$PR_NUMBER" ]; then
+          if [  "$PR_NUMBER" != ""  ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
           else
