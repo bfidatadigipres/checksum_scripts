@@ -92,36 +92,69 @@ jobs:
             echo "upstream_owner=$UPSTREAM_OWNER" >> $GITHUB_OUTPUT
 
 
-            - name: Check if PR exists
-            id: check-pr
-            if: github.event_name == 'push'
-            run: |
-              BRANCH_NAME="${{ steps.repo-info.outputs.branch_name }}"
-              FORK_OWNER="${{ steps.repo-info.outputs.fork_owner }}"
-              UPSTREAM_OWNER="${{ steps.repo-info.outputs.upstream_owner }}"
-              REPO_NAME="${{ steps.repo-info.outputs.repo_name }}"
+      - name: Check if PR exists
+        id: check-pr
+        if: github.event_name == 'push'
+        run: |
+          BRANCH_NAME="${{ steps.repo-info.outputs.branch_name }}"
+          FORK_OWNER="${{ steps.repo-info.outputs.fork_owner }}"
+          UPSTREAM_OWNER="${{ steps.repo-info.outputs.upstream_owner }}"
+          REPO_NAME="${{ steps.repo-info.outputs.repo_name }}"
 
-              if [[ "${{ secrets.PERSONAL_ACCESS_TOKEN }}" != "" ]]; then
-                echo "Using personal access token for cross-repo operations"
-                USING_PAT=true
-              else
-                echo "Error: PERSONAL_ACCESS_TOKEN secret is missing or invalid"
-                exit 1
-              fi
+          if [[ "${{ secrets.PERSONAL_ACCESS_TOKEN }}" != "" ]]; then
+            echo "Using personal access token for cross-repo operations"
+            USING_PAT=true
+          else
+            echo "Using GITHUB_TOKEN (note: may have limited permissions for cross-repo operations)"
+            USING_PAT=false
+          fi
 
+
+          # Check if this is a PR to the same repo or cross-repo
+          if [[ "$FORK_OWNER" == "$UPSTREAM_OWNER" ]]; then
+            echo "This is a branch in the same repository (not a fork)"
+            # Check for existing PRs within the same repo
+            PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base main --json number --jq 'length')
+          else
+            if [[ "$USING_PAT" == "true" ]]; then
               # Check for existing PRs from fork to upstream
               PR_EXISTS=$(gh pr list --head "$FORK_OWNER:$BRANCH_NAME" --base main --repo "$UPSTREAM_OWNER/$REPO_NAME" --json number --jq 'length' || echo "0")
+            else
+              echo "Warning: Checking PRs across repositories requires a personal access token"
+              PR_EXISTS="0"
+            fi
+          fi
 
-              echo "Number of existing PRs: $PR_EXISTS"
+          echo "Number of existing PRs: $PR_EXISTS"
 
-              # Create PR to the appropriate repository
-              if [[ "$PR_EXISTS" -eq 0 ]]; then
-                gh pr create --repo "$UPSTREAM_OWNER/$REPO_NAME" --base main --head "$FORK_OWNER:$BRANCH_NAME" --title "Automated PR" --body "This PR was created automatically."
+          # Create PR if none exists
+          if [[ "$PR_EXISTS" == "0" ]]; then
+            echo "No PR exists, creating one now"
+
+            # Prepare PR title and body
+            PR_TITLE="Automated PR from $(if [[ $FORK_OWNER != $UPSTREAM_OWNER ]]; then echo "fork: $FORK_OWNER:"; fi)$BRANCH_NAME"
+            PR_BODY="This PR was automatically created from branch: $BRANCH_NAME"
+
+            # Create PR to the appropriate repository
+            if [[ "$FORK_OWNER" == "$UPSTREAM_OWNER" ]]; then
+              # Create PR within the same repository
+              gh pr create --base main --head "$BRANCH_NAME" --title "$PR_TITLE" --body "$PR_BODY"
+            else
+              # Create PR from fork to upstream
+              if [[ "$USING_PAT" == "true" ]]; then
+                gh pr create --repo "$UPSTREAM_OWNER/$REPO_NAME" --base main --head "$FORK_OWNER:$BRANCH_NAME" --title "$PR_TITLE" --body "$PR_BODY"
               else
-                echo "PR already exists - skipping PR creation"
+                echo "Error: Cannot create cross-repository PR without a personal access token"
               fi
-            env:
-              GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            fi
+          else
+            echo "PR already exists - skipping PR creation"
+          fi
+
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || secrets.PERSONAL_ACCESS_TOKEN }}
+
       # - name: Create PR
       #   if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main' && github.event_name == 'push'
       #   run: |
