@@ -171,6 +171,7 @@ jobs:
         id: save_report
         run: |
           pylint_report=$(cat reports/pylint-report.txt)
+          pylint_report_cleaned=$(echo "$pylint_report" | sed 's/[^a-zA-Z0-9 ]//g' | tr -d '\n')
           echo "pylint_report=$pylint_report" >> $GITHUB_ENV
     
       - name: Comment on PR
