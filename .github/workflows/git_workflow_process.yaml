@@ -79,6 +79,7 @@ jobs:
         run: |
             echo "Creating PR for branch ${{ github.ref_name }}"
             gh pr create \
+              --repo "bfidatadigipres/checksum_scripts" \
               --base main \
               --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
               --title "Automated PR for branch: ${{ github.ref_name }}" \
@@ -95,7 +96,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref }}
           fetch-depth: 0
 
-      - run: git pull  # Ensure we have the latest changes
+      - run: git pull
 
       - uses: actions/setup-python@v5
         with:
