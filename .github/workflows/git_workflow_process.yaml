@@ -170,5 +170,4 @@ jobs:
             body-file: reports/pylint-report.txt
             edit-mode: replace
             repository: bfidatadigipres/checksum_scripts
-        env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
