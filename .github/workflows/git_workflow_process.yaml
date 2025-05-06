@@ -61,6 +61,9 @@ jobs:
       - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true' || steps.check-changes.outputs.changes == 'false'
         run: |
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git merge origin/${{ github.ref_name }} --no-edit || true
             git add .
             git commit -m "Apply automatic formatting with Black and isort" || echo "No changes to commit"
             git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
