@@ -76,17 +76,18 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR
-        if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main'
+        if: steps.check-pr.outputs.create_pr == 'true'
         run: |
-            echo "Creating PR..."
-            gh pr create \
-              --repo bfidatadigipres/checksum_scripts \
-              --base main \
-              --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
-              --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
-              --body "This PR was automatically created from forked repo changes." || echo "PR already exists, skipping PR creation"
+          echo "Creating PR..."
+          gh pr create \
+            --repo bfidatadigipres/checksum_scripts \
+            --base main \
+            --head "${{ github.ref_name }}" \
+            --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
+            --body "This PR was automatically created from forked repo changes." || echo "PR already exists, skipping PR creation"
         env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
 
   lint:
     runs-on: ubuntu-latest
@@ -121,23 +122,23 @@ jobs:
             path: reports/pylint-report.txt
 
         - name: Find or Comment on PR
-          if: github.event_name == 'pull_request' || github.event_name == 'push'
+          if: github.event_name == 'pull_request'
           run: |
-              echo "Finding PR for branch '${{ github.ref_name }}'..."
+                echo "Finding PR for branch '${{ github.ref_name }}'..."
 
-              PR_NUMBER=$(gh pr list \
-                --repo bfidatadigipres/checksum_scripts \
-                --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
-                --base main \
-                --json number \
-                --jq '.[0].number')
+                PR_NUMBER=$(gh pr list \
+                  --repo bfidatadigipres/checksum_scripts \
+                  --head "${{ github.ref_name }}" \
+                  --base main \
+                  --json number \
+                  --jq '.[0].number')
 
-              if [[ -z "$PR_NUMBER" ]]; then
-                echo "No PR found for branch '${{ github.ref_name }}'. Skipping comment."
-                exit 0
-              fi
+                if [[ -z "$PR_NUMBER" ]]; then
+                  echo "No PR found for branch '${{ github.ref_name }}'. Skipping comment."
+                  exit 0
+                fi
 
-              echo "Commenting on PR #$PR_NUMBER..."
-              gh pr comment "$PR_NUMBER" --body "$(cat reports/pylint-report.txt)"
+                echo "Commenting on PR #$PR_NUMBER..."
+                gh pr comment "$PR_NUMBER" --body "$(cat reports/pylint-report.txt)"
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
