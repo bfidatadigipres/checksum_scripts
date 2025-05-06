@@ -72,7 +72,7 @@ jobs:
             # Query the GitHub API to check for existing PRs
             PR_EXISTS=$(gh pr list \
                 --repo "bfidatadigipres/checksum_scripts" \
-                --head "${{ github.repository_owner }}:${BRANCH_NAME}" \
+                --head "${BRANCH_NAME}" \
                 --base main \
                 --state open \
                 --json number \
