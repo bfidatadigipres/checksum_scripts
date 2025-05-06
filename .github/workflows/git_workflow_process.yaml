@@ -80,7 +80,7 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create PR
-        if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main' && github.event_name == 'push'
+        if: steps.check-pr.outputs.create_pr == 'true' && github.ref != 'refs/heads/main'
         run: |
             echo "Creating PR..."
             gh pr create \
