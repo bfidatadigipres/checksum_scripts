@@ -58,7 +58,7 @@ jobs:
           git remote set-url origin https://github.com/${{ github.repository_owner }}/checksum_scripts.git
           git push origin HEAD
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Check if PR exists
         id: check-pr
@@ -91,7 +91,7 @@ jobs:
               --title "Automated PR from ${{ github.repository_owner }}:${{ github.ref_name }}" \
               --body "This PR was automatically created from forked repo changes."
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN}}
 
   lint:
     runs-on: ubuntu-latest
