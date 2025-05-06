@@ -106,7 +106,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
       runs-on: ubuntu-latest
@@ -129,9 +129,6 @@ jobs:
           run: |
             mkdir -p reports
             python -m pylint *.py > reports/pylint-report.txt || true
-            sed -i 's/E:.*/🚨 &/' reports/pylint-report.txt
-            sed -i 's/W:.*/⚠️ &/' reports/pylint-report.txt
-            sed -i 's/I:.*/ℹ️ &/' reports/pylint-report.txt
 
         - name: Save Pylint report content to an environment file
           id: save_report
