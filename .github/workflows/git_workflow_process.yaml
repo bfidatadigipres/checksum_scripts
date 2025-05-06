@@ -1,3 +1,4 @@
+
 name: Automated Git Workflow used by developers
 
 on:
@@ -23,9 +24,11 @@ jobs:
 
       - name: Install GitHub CLI
         run: |
-          curl -fsSL https://cli.github.com/packages/githubcli.repo | sudo tee /etc/apt/sources.list.d/github-cli.list
-          sudo apt update
-          sudo apt install gh
+            type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh -y
 
       - name: Setup Git
         run: |
@@ -62,7 +65,7 @@ jobs:
           git checkout ${{ github.ref_name }}
           git merge origin/${{ github.ref_name }} --no-edit || true
           git add .
-          git commit -m "Apply automatic formatting with Black and isort" || echo "No changes to commit"
+          git diff-index --quiet HEAD || git commit -m "Apply automatic formatting with Black and isort"
           git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
