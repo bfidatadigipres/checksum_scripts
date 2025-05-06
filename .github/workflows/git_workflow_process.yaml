@@ -145,9 +145,17 @@ jobs:
         run: |
           BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
           echo "Checking for PR on branch: $BRANCH_NAME"
-          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number -q '.[-1].number' || echo "") 
+          
+          PR_NUMBER=$(gh pr list \
+                --repo "bfidatadigipres/checksum_scripts" \
+                --head "${BRANCH_NAME}" \
+                --base main \
+                --state open \
+                --json number \
+                --jq '.[0].number' 2>/dev/null || echo "error")
+                
           echo "Found PR number: $PR_NUMBER"
-          if [  "$PR_NUMBER" != ""  ]; then
+          if [  "$PR_NUMBER" != "error" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
           else
