@@ -53,7 +53,8 @@ jobs:
         run: |
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+          git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}
+          git push origin HEAD:${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
 
