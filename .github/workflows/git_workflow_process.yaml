@@ -135,19 +135,23 @@ jobs:
           name: pylint-report
           path: reports/pylint-report.txt
 
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Check if PR exists
         id: check-pr
-        run: |
-            gh pr list --head "${{ github.head_ref || github.ref_name }}" --json number -q '.[0].number' > pr_number.txt || echo ""
-            PR_NUMBER=$(cat pr_number.txt)
-            if [ -n "$PR_NUMBER" ]; then
-              echo "exists=true" >> $GITHUB_OUTPUT
-              echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
-            else
-              echo "exists=false" >> $GITHUB_OUTPUT
-            fi
         env:
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr list --head "$BRANCH_NAME" --json number -q '.[0].number' > pr_number.txt || echo ""
+          PR_NUMBER=$(cat pr_number.txt)
+          if [ -n "$PR_NUMBER" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Comment on PR
         if: steps.check-pr.outputs.exists == 'true'
