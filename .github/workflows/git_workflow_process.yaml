@@ -134,4 +134,3 @@ jobs:
             ```txt
             $(cat reports/pylint-report.txt)
             ```
-
