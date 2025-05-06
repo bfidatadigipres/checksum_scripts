@@ -65,14 +65,15 @@ jobs:
         id: check-pr
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
-            BRANCH_NAME="${{ github.ref_name || github.ref}}"
-            echo "Current branch: $BRANCH_NAME"
-            PR_EXISTS=$(curl -s \
-                          "https://api.github.com/repos/datadigipres/checksum_scripts/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main" \
-                          | jq 'length')
-            echo "Number of existing PRs: $PR_EXISTS"
+            BRANCH_NAME="${{ github.ref_name || github.ref}}
             echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
-            echo "Number of existing PRs: $PR_EXISTS"
+
+            PR_EXISTS=$(curl -s \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/repos/datadigipres/checksum_scripts/pulls?head=${{ github.repository_owner }}:$BRANCH_NAME&base=main" \
+                | jq 'length')
+
+            echo "API response: $PR_EXISTS"
 
             if [ "$PR_EXISTS" -gt 0 ]; then
               echo "PR for branch $BRANCH_NAME already exists"
