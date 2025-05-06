@@ -141,11 +141,11 @@ jobs:
       - name: Check if PR exists
         id: check-pr
         env:
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr list --head "$BRANCH_NAME" --json number -q '.[0].number' > pr_number.txt || echo ""
-          PR_NUMBER=$(cat pr_number.txt)
+          BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --state open --json number -q '.[0].number' || echo "")
+          echo "Found PR number: $PR_NUMBER"
           if [ -n "$PR_NUMBER" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
