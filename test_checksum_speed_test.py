@@ -78,3 +78,8 @@ def test_md5_med21():
 def test_md5_med20():
     md5_check = checksum_speed_test.md5_65536("")
     assert md5_check is None
+
+
+def test_md5_med22():
+    md5_check = checksum_speed_test.md5_65536("")
+    assert md5_check is None
