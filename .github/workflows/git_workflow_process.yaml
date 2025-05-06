@@ -133,7 +133,15 @@ jobs:
             sed -i 's/E:.*/🚨 &/' reports/pylint-report.txt
             sed -i 's/W:.*/⚠️ &/' reports/pylint-report.txt
             sed -i 's/I:.*/ℹ️ &/' reports/pylint-report.txt
-        
+
+        - name: Save Pylint report content to an environment file
+          id: save_report
+          run: |
+            pylint_report=$(cat reports/pylint-report.txt)
+            echo "pylint_report<<EOF" >> $GITHUB_ENV
+            echo "$pylint_report" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            
         - name: Authenticate GitHub CLI
           run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
     
@@ -160,14 +168,6 @@ jobs:
             else
               echo "exists=false" >> $GITHUB_OUTPUT
             fi
-    
-        - name: Save Pylint report to a variable
-          id: save_report
-          run: |
-            pylint_report=$(cat reports/pylint-report.txt)
-            echo "pylint_report<<EOF" >> $GITHUB_ENV
-            echo "$pylint_report" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
     
         - name: Comment on PR with Full Pylint Report
           if: steps.check-pr.outputs.exists == 'true'
