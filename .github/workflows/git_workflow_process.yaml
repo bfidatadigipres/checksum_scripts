@@ -90,7 +90,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Create PR
@@ -104,7 +104,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }}
 
   lint:
       runs-on: ubuntu-latest
@@ -145,7 +145,7 @@ jobs:
         - name: Check if PR exists
           id: check-pr
           env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
           run: |
             BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
             echo "Checking for PR on branch: $BRANCH_NAME"
@@ -177,4 +177,4 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            token: ${{ secrets.GITHUB_TOKEN }}
