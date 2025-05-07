@@ -187,6 +187,6 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            token: ${{ secrets.GITHUB_TOKEN }}
           # env:
           #   GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
