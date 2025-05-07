@@ -28,11 +28,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Get full history
 
-
       - name: Setup Git
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
+
       - name: Run Black (format instead of check)
         uses: psf/black@stable
         with:
@@ -55,6 +55,7 @@ jobs:
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "No formatting changes needed"
           fi
+
       - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true'
         run: |
@@ -71,8 +72,8 @@ jobs:
 
             # Query the GitHub API to check for existing PRs
             PR_EXISTS=$(gh pr list \
-                --repo "bfidatadigipres/checksum_scripts" \
-                --head "${BRANCH_NAME}" \
+                --repo "bfidatidigipres/checksum_scripts" \
+                --head "${{ github.repository_owner }}:${BRANCH_NAME}" \
                 --base main \
                 --state open \
                 --json number \
@@ -91,15 +92,14 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
-
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Create PR
         if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
               echo "Creating PR for branch ${{ github.ref_name }}"
               gh pr create \
-                --repo "bfidatadigipres/checksum_scripts" \
+                --repo "bfidatidigipres/checksum_scripts" \
                 --base main \
                 --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
