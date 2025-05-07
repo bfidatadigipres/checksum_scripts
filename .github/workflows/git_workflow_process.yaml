@@ -31,8 +31,8 @@ jobs:
 
       - name: Setup Git
         run: |
-            git config user.name "GitHub Actions Bot"
-            git config user.email "actions@github.com"
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run security scans with CodeQL
         uses: github/codeql-action/init@v3
@@ -69,7 +69,7 @@ jobs:
         run: |
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Check if PR exists
         id: check-pr
@@ -112,10 +112,10 @@ jobs:
                 --base main \
                 --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
-                --body "This PR was automatically created from branch: ${{ github.ref_name }}"
+                --body "This PR was automatically created from branch: ${{ github.ref_name }}" \
+                --assignee "github-actions[bot]"  # Assign the PR to the GitHub Actions bot
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   lint:
       runs-on: ubuntu-latest
       needs: format-and-create-pr
