@@ -3,11 +3,11 @@ name: Automated Git Workflow used by developers
 on:
   push:
     branches: ['*']
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
   id-token: write
   issues: write
@@ -33,6 +33,14 @@ jobs:
         run: |
             git config user.name "GitHub Actions Bot"
             git config user.email "actions@github.com"
+
+      - name: Run security scans with CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+              languages: python
+
+      - name: Analyze code with CodeQL
+        uses: github/codeql-action/analyze@v2
 
       - name: Run Black (format instead of check)
         uses: psf/black@stable
@@ -92,7 +100,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Create PR
@@ -106,7 +114,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
 
   lint:
       runs-on: ubuntu-latest
@@ -180,4 +188,4 @@ jobs:
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
