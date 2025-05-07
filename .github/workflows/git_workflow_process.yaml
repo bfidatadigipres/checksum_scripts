@@ -162,7 +162,7 @@ jobs:
           with:
             issue-number: ${{ steps.check-pr.outputs.number }}
             edit-mode: replace
-            repository: bfidatidigipres/checksum_scripts
+            repository: bfidatadigipres/checksum_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
 
