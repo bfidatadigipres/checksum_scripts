@@ -127,6 +127,10 @@ jobs:
           run: |
             mkdir -p reports
             python -m pylint *.py > reports/pylint-report.txt || true
+            sed -i 's/E:.*/🚨 &/' reports/pylint-report.txt
+            sed -i 's/W:.*/⚠️ &/' reports/pylint-report.txt
+            sed -i 's/I:.*/ℹ️ &/' reports/pylint-report.txt
+
         - name: Save Pylint report content to an environment file
           id: save_report
           run: |
