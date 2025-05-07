@@ -1,4 +1,4 @@
-'''
+"""
 Actions of the script:
 1. Iterates through path list, stored in paths variable, and checks path is legitimate.
 2. For each path it iterates through the files within it (there is no check here for media type).
@@ -17,50 +17,50 @@ Actions of the script:
 
 Joanna White 2020
 Python 2.7+ and 3 compliant
-'''
+"""
 
-import os
-import zlib
 import hashlib
-import timeit
 import logging
+import os
+import timeit
+import zlib
 
 # Setup logging
-logger = logging.getLogger('checksum_speed_tests_crontab')
-hdlr = logging.FileHandler('/add_your_path_here/checksum_speed_tests_crontab.log')
-formatter = logging.Formatter('%(asctime)s\t%(levelname)s\t%(message)s')
+logger = logging.getLogger("checksum_speed_tests_crontab")
+hdlr = logging.FileHandler("/add_your_path_here/checksum_speed_tests_crontab.log")
+formatter = logging.Formatter("%(asctime)s\t%(levelname)s\t%(message)s")
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
 paths = [
-         '/mnt/add_your_path_here_1/checksum_test/',
-         '/mnt/add_your_path_here_1/checksum_test/'
-        ]
+    "/mnt/add_your_path_here_1/checksum_test/",
+    "/mnt/add_your_path_here_1/checksum_test/",
+]
 
 
 def crc_4096(file):
-    '''
+    """
     Zlib code
-    '''
+    """
     try:
-        with open(file, 'rb') as afile:
+        with open(file, "rb") as afile:
             buffersize = 4096
             buffr = afile.read(buffersize)
             crcvalue = 0
             while len(buffr) > 0:
                 crcvalue = zlib.crc32(buffr, crcvalue)
                 buffr = afile.read(buffersize)
-        return format(crcvalue & 0xFFFFFFFF, '08x')
+        return format(crcvalue & 0xFFFFFFFF, "08x")
 
     except Exception:
         return None
 
 
 def md5_4096(file):
-    '''
+    """
     Hashlib code
-    '''
+    """
     try:
         hash_md5 = hashlib.md5()
         with open(file, "rb") as fname:
@@ -73,27 +73,27 @@ def md5_4096(file):
 
 
 def crc_65536(file):
-    '''
+    """
     Zlib code
-    '''
+    """
     try:
-        with open(file, 'rb') as afile:
+        with open(file, "rb") as afile:
             buffersize = 65536
             buffr = afile.read(buffersize)
             crcvalue = 0
             while len(buffr) > 0:
                 crcvalue = zlib.crc32(buffr, crcvalue)
                 buffr = afile.read(buffersize)
-        return format(crcvalue & 0xFFFFFFFF, '08x')
+        return format(crcvalue & 0xFFFFFFFF, "08x")
 
     except Exception:
         return None
 
 
 def md5_65536(file):
-    '''
+    """
     Hashlib code
-    '''
+    """
     try:
         hash_md5 = hashlib.md5()
         with open(file, "rb") as fname:
@@ -112,7 +112,7 @@ def main():
                 for file in files:
                     filepath = os.path.join(root, file)
                     size = os.stat(filepath)
-                    size_mb = int(size.st_size / (1024*1024))
+                    size_mb = int(size.st_size / (1024 * 1024))
                     # CRC32 Speed tests 4096 start here
                     crc_time = timeit.timeit(lambda: crc_4096(filepath), number=1)
                     # MD5 Speed tests 4096 start here
@@ -121,11 +121,31 @@ def main():
                     crc2_time = timeit.timeit(lambda: crc_65536(filepath), number=1)
                     # MD5 Speed tests 65536 start here
                     md52_time = timeit.timeit(lambda: md5_65536(filepath), number=1)
-                    logger.info("%s\t CRC32 4096\t %s\t %s\t Python <version>", filepath, size_mb, crc_time)
-                    logger.info("%s\t MD5 4096\t %s\t %s\t Python <version>", filepath, size_mb, md5_time)
-                    logger.info("%s\t CRC32 65536\t %s\t %s\t Python <version>", filepath, size_mb, crc2_time)
-                    logger.info("%s\t MD5 65536\t %s\t %s\t Python <version>", filepath, size_mb, md52_time)
+                    logger.info(
+                        "%s\t CRC32 4096\t %s\t %s\t Python <version>",
+                        filepath,
+                        size_mb,
+                        crc_time,
+                    )
+                    logger.info(
+                        "%s\t MD5 4096\t %s\t %s\t Python <version>",
+                        filepath,
+                        size_mb,
+                        md5_time,
+                    )
+                    logger.info(
+                        "%s\t CRC32 65536\t %s\t %s\t Python <version>",
+                        filepath,
+                        size_mb,
+                        crc2_time,
+                    )
+                    logger.info(
+                        "%s\t MD5 65536\t %s\t %s\t Python <version>",
+                        filepath,
+                        size_mb,
+                        md52_time,
+                    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
