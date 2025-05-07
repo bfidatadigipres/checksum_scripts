@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write  # Changed to write to allow pushing changes
+  contents: write
   pull-requests: write
   id-token: write
   issues: write
@@ -60,7 +60,7 @@ jobs:
         run: |
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Check if PR exists
         id: check-pr
@@ -91,7 +91,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
 
 
       - name: Create PR
@@ -105,7 +105,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }}
 
   lint:
       runs-on: ubuntu-latest
@@ -146,7 +146,7 @@ jobs:
         - name: Check if PR exists
           id: check-pr
           env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
+            GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           run: |
             BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
             echo "Checking for PR on branch: $BRANCH_NAME"
