@@ -35,7 +35,7 @@ jobs:
             git config user.email "actions@github.com"
 
       - name: Run security scans with CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
               languages: python
 
@@ -69,7 +69,7 @@ jobs:
         run: |
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Check if PR exists
         id: check-pr
@@ -187,5 +187,6 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-          env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          # env:
+          #   GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
