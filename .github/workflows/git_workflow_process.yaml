@@ -100,7 +100,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN  }}
 
 
       - name: Create PR
@@ -150,7 +150,7 @@ jobs:
             echo "EOF" >> $GITHUB_ENV
 
         - name: Authenticate GitHub CLI
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          run: echo "${{ secrets.PERSONAL_ACCESS_TOKEN  }}" | gh auth login --with-token
 
         - name: Check if PR exists
           id: check-pr
