@@ -48,3 +48,8 @@ def test_md5_med_btoken__():
 def test_md5_med_bton__():
     md5_check = checksum_speed_test.md5_4096("...!!!!!!..")
     assert md5_check is None
+
+
+def test_md5_med_more_of_the_same():
+    md5_check = checksum_speed_test.md5_4096("...!@!..")
+    assert md5_check is None
