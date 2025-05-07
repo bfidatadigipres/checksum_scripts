@@ -103,7 +103,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN }}
 
   lint:
       runs-on: ubuntu-latest
