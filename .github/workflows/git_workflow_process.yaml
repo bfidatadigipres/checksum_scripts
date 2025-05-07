@@ -141,7 +141,7 @@ jobs:
             echo "EOF" >> $GITHUB_ENV
 
         - name: Authenticate GitHub CLI
-          run: echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+          run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
         - name: Check if PR exists
           id: check-pr
@@ -178,4 +178,4 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            token: ${{ secrets.GITHUB_TOKEN }}
