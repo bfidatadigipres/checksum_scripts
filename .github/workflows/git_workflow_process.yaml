@@ -187,6 +187,6 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-            token: ${{ secrets.GITHUB_TOKEN }}
+            token: ${{ secrets.MYGIT_BOT  }}
           # env:
           #   GITHUB_TOKEN: ${{ secrets.MYGIT_BOT }}
