@@ -59,13 +59,14 @@ jobs:
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
           git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+
       - name: Check if PR exists
         id: check-pr
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
             BRANCH_NAME="${{ github.ref_name || github.ref}}"
             echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
-            
+
             # Query the GitHub API to check for existing PRs
             PR_EXISTS=$(gh pr list \
                 --repo "bfidatadigipres/checksum_scripts" \
@@ -74,9 +75,9 @@ jobs:
                 --state open \
                 --json number \
                 --jq 'length' 2>/dev/null || echo "error")
-        
+
             echo "PR_EXISTS raw value: $PR_EXISTS"
-        
+
             if [ "$PR_EXISTS" = "error" ]; then
               echo "Error querying GitHub API — assuming no PR exists"
               echo "create_pr=true" >> $GITHUB_OUTPUT
@@ -88,7 +89,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}}
+            GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
 
 
       - name: Create PR
@@ -132,7 +133,7 @@ jobs:
             echo "pylint_report<<EOF" >> $GITHUB_ENV
             echo "$pylint_report" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
-            
+
         - name: Authenticate GitHub CLI
           run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
@@ -143,7 +144,7 @@ jobs:
           run: |
             BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
             echo "Checking for PR on branch: $BRANCH_NAME"
-            
+
             PR_NUMBER=$(gh pr list \
                   --repo "bfidatidigipres/checksum_scripts" \
                   --head "${BRANCH_NAME}" \
@@ -151,7 +152,7 @@ jobs:
                   --state open \
                   --json number \
                   --jq '.[0].number' 2>/dev/null || echo "error")
-                  
+
             echo "Found PR number: $PR_NUMBER"
             if [  "$PR_NUMBER" != "error" ]; then
               echo "exists=true" >> $GITHUB_OUTPUT
@@ -159,7 +160,7 @@ jobs:
             else
               echo "exists=false" >> $GITHUB_OUTPUT
             fi
-    
+
         - name: Comment on PR with Full Pylint Report
           if: steps.check-pr.outputs.exists == 'true'
           uses: peter-evans/create-or-update-comment@v4
@@ -169,7 +170,7 @@ jobs:
             repository: bfidatidigipres/checksum_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
-    
+
               Here is the **formatted** Pylint report:
 
               ```plaintext
