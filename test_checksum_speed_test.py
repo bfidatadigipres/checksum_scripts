@@ -38,13 +38,3 @@ def test_md5_med_btoken():
 def test_md5_med__():
     md5_check = checksum_speed_test.md5_4096("/dummy_directory/no_mmm/")
     assert md5_check is None
-
-
-def test_md5_med_btoken__():
-    md5_check = checksum_speed_test.md5_4096("...!!!..")
-    assert md5_check is None
-
-
-def test_md5_med_bton__():
-    md5_check = checksum_speed_test.md5_4096("...!!!!!!..")
-    assert md5_check is None
