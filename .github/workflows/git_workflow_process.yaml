@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   id-token: write
   issues: write
@@ -40,7 +40,7 @@ jobs:
 
       - name: Authenticate GitHub CLI
         run: |
-              echo "${{ secrets.PERSONAL_ACCESS_TOKEN }}" | gh auth login --with-token
+              echo "${{ secrets.BFI_BOT_TOKEN }}" | gh auth login --with-token
 
       - name: Run security scans with CodeQL
         uses: github/codeql-action/init@v3
@@ -77,7 +77,7 @@ jobs:
         run: |
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{secrets.PERSONAL_ACCESS_TOKEN}}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+          git push https://x-access-token:${{secrets.BFI_BOT_TOKEN}}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Check if PR exists
         id: check-pr
@@ -108,7 +108,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            GH_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
 
 
       - name: Create PR
@@ -122,7 +122,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}" \
         env:
-           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+           GH_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
 
   lint:
       runs-on: ubuntu-latest
@@ -135,7 +135,7 @@ jobs:
         - name: Authenticate GitHub CLI
           run: |
              unset GH_TOKEN
-             echo "${{ secrets.GITHUB_TOKEN}}" | gh auth login --with-token
+             echo "${{ secrets.BFI_BOT_TOKEN}}" | gh auth login --with-token
 
 
         - uses: actions/checkout@v4
@@ -170,7 +170,7 @@ jobs:
         - name: Check if PR exists
           id: check-pr
           env:
-            GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            GITHUB_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
           run: |
             BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
             echo "Checking for PR on branch: $BRANCH_NAME"
@@ -202,6 +202,6 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-            # token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+            token: ${{ secrets.BFI_BOT_TOKEN }}
+          # env:
+          #   GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
