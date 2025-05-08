@@ -121,7 +121,6 @@ jobs:
                 --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}" \
-                --assignee "github-actions[bot]"  # Assign the PR to the GitHub Actions bot
         env:
            GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN}}
 
