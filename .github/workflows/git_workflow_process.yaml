@@ -135,7 +135,7 @@ jobs:
         - name: Authenticate GitHub CLI
           run: |
              unset GH_TOKEN
-             echo "${{ secrets.GITHUB_TOKEN || secrets.PERSONAL_ACCESS_TOKEN}}" | gh auth login --with-token
+             echo "${{ secrets.GITHUB_TOKEN}}" | gh auth login --with-token
 
 
         - uses: actions/checkout@v4
@@ -202,6 +202,6 @@ jobs:
               ```
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            # token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           env:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
