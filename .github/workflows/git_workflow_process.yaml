@@ -115,7 +115,7 @@ jobs:
               echo "create_pr=true" >> $GITHUB_OUTPUT
             fi
         env:
-            GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN}}
+            GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 
       - name: Create PR
@@ -129,7 +129,7 @@ jobs:
                 --title "Automated PR for branch: ${{ github.ref_name }}" \
                 --body "This PR was automatically created from branch: ${{ github.ref_name }}" \
         env:
-           GITHUB_TOKEN: ${{secrets.PERSONAL_ACCESS_TOKEN}}
+           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   lint:
       runs-on: ubuntu-latest
@@ -210,5 +210,5 @@ jobs:
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
             token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          # env:
-          #   GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
