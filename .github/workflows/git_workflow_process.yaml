@@ -158,9 +158,9 @@ jobs:
             export LANG=en_US.UTF-8
             mkdir -p reports
             python -m pylint *.py > reports/pylint-report.txt || true
-            sed -i 's/E:.*/🚨 &/' reports/pylint-report.txt
-            sed -i 's/W:.*/⚠️ &/' reports/pylint-report.txt
-            sed -i 's/I:.*/ℹ️ &/' reports/pylint-report.txt
+            sed -i 's/^E:.*/🚨 &/' reports/pylint-report.txt
+            sed -i 's/^W:.*/⚠️ &/' reports/pylint-report.txt
+            sed -i 's/^I:.*/ℹ️ &/' reports/pylint-report.txt
 
         - name: print file
           run: cat reports/pylint-report.txt
