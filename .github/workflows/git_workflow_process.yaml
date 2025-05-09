@@ -199,9 +199,8 @@ jobs:
 
               Here is the **formatted** Pylint report:
 
-              ```plaintext
               ${{ env.pylint_report }}
-              ```
+
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
             token: ${{ secrets.BFI_BOT_TOKEN }}
