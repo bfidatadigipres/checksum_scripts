@@ -171,10 +171,12 @@ jobs:
         - name: Save Pylint report content to an environment file
           id: save_report
           run: |
+           {
             pylint_report=$(cat reports/pylint-report.txt)
-            echo "pylint_report<<EOF" >> $GITHUB_ENV
-            echo "$pylint_report" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+            echo "pylint_report<<EOF"
+            echo "$pylint_report"
+            echo "EOF"
+            } >> $GITHUB_ENV
 
         - name: Check if PR exists
           id: check-pr
@@ -212,5 +214,3 @@ jobs:
 
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
             token: ${{ secrets.BFI_BOT_TOKEN }}
-          # env:
-          #   GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
