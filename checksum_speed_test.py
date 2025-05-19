@@ -101,9 +101,7 @@ def md5_65536(file):
 
 def main():
     if len(sys.argv) < 2:
-        print(
-            "Please remember to supply a file name to run size checks against:\npython3 checksum.py /path_to_file/video.mkv"
-        )
+        print "Please remember to supply a file name to run size checks against:\npython3 checksum.py /path_to_file/video.mkv"
     else:
         filepath = sys.argv[1]
         if not (os.path.isfile(filepath)):
