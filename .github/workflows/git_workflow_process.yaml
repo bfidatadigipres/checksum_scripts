@@ -26,7 +26,7 @@ jobs:
         with:
           ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # Get full history
+          fetch-depth: 0
 
 
       - name: Setup Git
@@ -42,10 +42,10 @@ jobs:
         run: |
               echo "${{ secrets.BFI_BOT_TOKEN }}" | gh auth login --with-token
 
-      - name: Run security scans with CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-              languages: python
+      # - name: Run security scans with CodeQL
+      #   uses: github/codeql-action/init@v3
+      #   with:
+      #         languages: python
 
       # - name: Analyze code with CodeQL
       #   uses: github/codeql-action/analyze@v2
@@ -75,9 +75,12 @@ jobs:
       - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true'
         run: |
+          TIMESTAMP=$(date +%s)
+          FORMAT_BRANCH="${{ github.head_ref || github.ref_name }}-format-${TIMESTAMP}"
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{secrets.BFI_BOT_TOKEN}}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+          git push origin "${FORMAT_BRANCH}"
+          echo "format_branch=${FORMAT_BRANCH}" >> $GITHUB_OUTPUT
 
       - name: Check if PR exists
         id: check-pr
@@ -171,12 +174,10 @@ jobs:
         - name: Save Pylint report content to an environment file
           id: save_report
           run: |
-           {
             pylint_report=$(cat reports/pylint-report.txt)
-            echo "pylint_report<<EOF"
-            echo "$pylint_report"
-            echo "EOF"
-            } >> $GITHUB_ENV
+            echo "pylint_report<<EOF" >> $GITHUB_ENV
+            echo "$pylint_report" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
 
         - name: Check if PR exists
           id: check-pr
