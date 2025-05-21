@@ -81,7 +81,9 @@ jobs:
           git push https://x-access-token:${{secrets.BFI_BOT_TOKEN}}@github.com/${{ github.repository }} $FORMATTING_BRANCH
 
         env:
-          FORMATTING_BRANCH: "${{ github.head_ref || github.ref_name }}-format-$(date +%s)"
+          TIMESTAMP: $(date +%s)
+          FORMATTING_BRANCH: "${{ github.head_ref || github.ref_name }}-format-$TIMESTAMP"
+
 
       - name: Check if PR exists
         id: check-pr
@@ -119,12 +121,13 @@ jobs:
         if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
           echo "Creating PR from $FORMATTING_BRANCH to ${{ github.head_ref || github.ref_name }}"
+
           gh pr create \
-          --repo "${{ github.repository }}" \
-          --base main \
-          --head "${{ github.repository_owner }}:${FORMATTING_BRANCH}" \
-          --title "Automated formatting PR for branch: $FORMATTING_BRANCH" \
-          --body "This PR applies automatic formatting with Black and isort to branch: $FORMATTING_BRANCH"
+            --repo "${{ github.repository }}" \
+            --base "${{ github.head_ref || github.ref_name }}" \
+            --head "$FORMATTING_BRANCH" \
+            --title "Automated formatting PR for branch: ${{ github.head_ref || github.ref_name }}" \
+            --body "This PR applies automatic formatting with Black and isort to branch: ${{ github.head_ref || github.ref_name }}"
         env:
            GH_TOKEN: ${{ secrets.BFI_BOT_TOKEN}}
            REPO_OWNER: ${{ github.repository_owner }}
