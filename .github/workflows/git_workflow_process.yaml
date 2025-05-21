@@ -43,7 +43,6 @@ jobs:
       #   uses: github/codeql-action/init@v3
       #   with:
       #         languages: python
-
       # - name: Analyze code with CodeQL
       #   uses: github/codeql-action/analyze@v2
 
@@ -75,6 +74,7 @@ jobs:
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
           git push https://x-access-token:${{secrets.BFI_BOT_TOKEN}}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
+
       - name: Check if PR exists
         id: check-pr
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
@@ -130,6 +130,7 @@ jobs:
           run: |
              unset GH_TOKEN
              echo "${{ secrets.BFI_BOT_TOKEN}}" | gh auth login --with-token
+
         - uses: actions/checkout@v4
           with:
             ref: ${{ github.head_ref || github.ref }}
@@ -154,6 +155,7 @@ jobs:
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(C[0-9]\{4\}\)/\1🎨 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(F[0-9]\{4\}\)/\1🛑 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(R[0-9]\{4\}\)/\1♻️ \2/' reports/pylint-report.txt
+
         - name: print file
           run: cat reports/pylint-report.txt
 
@@ -166,6 +168,7 @@ jobs:
             echo "$pylint_report"
             echo "EOF"
             } >> $GITHUB_ENV
+
         - name: Check if PR exists
           id: check-pr
           env:
