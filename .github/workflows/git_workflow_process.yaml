@@ -120,15 +120,16 @@ jobs:
         run: |
           echo "Creating PR from $FORMATTING_BRANCH to ${{ github.head_ref || github.ref_name }}"
           gh pr create \
-            --repo "bfidatadigipres/checksum_scripts" \
-            --base "${{ github.head_ref || github.ref_name }}" \
-            --head "$REPO_OWNER:$FORMATTING_BRANCH" \
-            --title "Automated formatting PR for branch: ${{ github.head_ref || github.ref_name }}" \
-            --body "This PR applies automatic formatting with Black and isort to branch: ${{ github.head_ref || github.ref_name }}"
+          --repo "${{ github.repository }}" \
+          --base main \
+          --head "${{ github.repository_owner }}:$FORMATTING_BRANCH" \
+          --title "Automated formatting PR for branch: $FORMATTING_BRANCH" \
+          --body "This PR applies automatic formatting with Black and isort to branch: $FORMATTING_BRANCH"
         env:
            GH_TOKEN: ${{ secrets.BFI_BOT_TOKEN}}
            REPO_OWNER: ${{ github.repository_owner }}
            REF_NAME: ${{ github.ref_name }}
+           FORMATTING_BRANCH: "${{ github.head_ref || github.ref_name }}-format-$(date +%s)"
 
   lint:
       runs-on: ubuntu-latest
