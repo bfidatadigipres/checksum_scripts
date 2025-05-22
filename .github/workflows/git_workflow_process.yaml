@@ -77,7 +77,6 @@ jobs:
         run: |
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push https://x-access-token:${{secrets.BFI_BOT_TOKEN}}@github.com/${{ github.repository }} HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Check if PR exists
         id: check-pr
