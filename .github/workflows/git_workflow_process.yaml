@@ -1,13 +1,16 @@
-name: Automated Formatting and PR Workflow
+name: Automated Git Workflow used by developers
 
 on:
   push:
+    branches: ['*']
   pull_request:
     types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
+  issues: write
 
 jobs:
   format-and-create-pr:
@@ -15,38 +18,41 @@ jobs:
     steps:
       - name: Debug Branch Info
         run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "Head Ref: ${{ github.head_ref }}"
-          echo "Ref Name: ${{ github.ref_name }}"
-          echo "Repo Owner: ${{ github.repository_owner }}"
-
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.head_ref: ${{ github.head_ref }}"
+          echo "repo owner: ${{ github.repository_owner }}"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref || github.ref }}
-          token: ${{ secrets.BFI_BOT_TOKEN }}  # Use token with bypass permissions
+          ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Setup Git Identity
-        run: |
-          git config user.name "BFI Automation Bot"
-          git config user.email "bfi-automation@users.noreply.github.com"
 
+      - name: Setup Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Set up GitHub CLI
         run: |
-          sudo apt-get update && sudo apt-get install -y gh
-
+              sudo apt-get update && sudo apt-get install -y gh
       - name: Authenticate GitHub CLI
         run: |
-          echo "${{ secrets.BFI_BOT_TOKEN }}" | gh auth login --with-token
+              echo "${{ secrets.BFI_BOT_TOKEN }}" | gh auth login --with-token
 
-      # Formatting steps
-      - name: Run Black
+      # - name: Run security scans with CodeQL
+      #   uses: github/codeql-action/init@v3
+      #   with:
+      #         languages: python
+
+      # - name: Analyze code with CodeQL
+      #   uses: github/codeql-action/analyze@v2
+
+      - name: Run Black (format instead of check)
         uses: psf/black@stable
         with:
           options: "."
 
-      - name: Run isort
+      - name: Run isort (apply changes)
         uses: isort/isort-action@v1
         with:
           requirements-files: ""
@@ -58,65 +64,62 @@ jobs:
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "changes=true" >> $GITHUB_OUTPUT
-            echo "Formatting changes detected"
+            echo "Formatting changes were needed and have been applied"
           else
             echo "changes=false" >> $GITHUB_OUTPUT
             echo "No formatting changes needed"
           fi
-
-      # Push changes using token with bypass permissions
-      - name: Push formatted changes
+      - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true'
+        id: push
         run: |
-          FORMAT_BRANCH="${{ github.ref_name }}-formatted-$(date +%s)"
-          git checkout -b "$FORMAT_BRANCH"
-          git add .
-          git commit -m "🔧 Automated formatting with Black/isort"
+            git add .
+            git commit -m "Apply automatic formatting with Black and isort"
 
-          # Push using the token with bypass permissions
-          git push origin "$FORMAT_BRANCH" \
-            --force-with-lease \
-            --no-verify  # Skip CI if needed
+            SAFE_BRANCH="${GITHUB_REF_NAME}-fmt-${GITHUB_RUN_ID}"
+            git push \
+              https://x-access-token:${{ secrets.BFI_BOT_TOKEN }}@github.com/${{ github.repository }} \
+              HEAD:${SAFE_BRANCH}
 
-          echo "formatted_branch=$FORMAT_BRANCH" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.BFI_BOT_TOKEN }}
+            echo "safe_branch=${SAFE_BRANCH}" >> $GITHUB_OUTPUT
 
-      # PR creation logic
-      - name: Check for existing PR
+      - name: Check if PR exists
         id: check-pr
-        if: steps.check-changes.outputs.changes == 'true'
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
-          PR_EXISTS=$(gh pr list \
-            --repo "bfidatadigipres/checksum_scripts" \
-            --head "$FORMAT_BRANCH" \
-            --base main \
-            --json number \
-            --jq 'length')
+            echo "Looking for open PR from ${SAFE_BRANCH} → main"
+            PR_EXISTS=$(gh pr list \
+              --repo "${{ github.repository }}" \
+              --head  "${SAFE_BRANCH}" \
+              --base  main \
+              --state open \
+              --json number --jq 'length')
 
-          if [ "$PR_EXISTS" -eq 0 ]; then
-            echo "create_pr=true" >> $GITHUB_OUTPUT
-          else
-            echo "create_pr=false" >> $GITHUB_OUTPUT
-            echo "PR already exists for branch $FORMAT_BRANCH"
-          fi
+            if [ "$PR_EXISTS" -eq 0 ]; then
+              echo "create_pr=true"  >> $GITHUB_OUTPUT
+            else
+              echo "create_pr=false" >> $GITHUB_OUTPUT
+            fi
         env:
-          GH_TOKEN: ${{ secrets.BFI_BOT_TOKEN }}
-          FORMAT_BRANCH: ${{ steps.push-changes.outputs.formatted_branch }}
+            GH_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
+            BRANCH_NAME: ${{ github.ref_name || github.ref}}
+            SAFE_BRANCH:  ${{ steps.push.outputs.safe_branch }}
 
-      - name: Create Pull Request
-        if: steps.check-pr.outputs.create_pr == 'true'
+
+      - name: Create PR
+        if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
           gh pr create \
-            --repo "bfidatadigipres/checksum_scripts" \
+            --repo "${{ github.repository }}" \
             --base main \
-            --head "${{ github.repository_owner }}:$FORMAT_BRANCH" \
-            --title "Automated formatting updates ($FORMAT_BRANCH)" \
-            --body "This PR contains automated formatting changes from Black and isort" \
-            --label "automated,formatting"
+            --head "${SAFE_BRANCH}" \
+            --title "Automated formatting fixes" \
+            --body  "This PR contains code formatted automatically by Black and isort."
         env:
-          GH_TOKEN: ${{ secrets.BFI_BOT_TOKEN }}
-          FORMAT_BRANCH: ${{ steps.push-changes.outputs.formatted_branch }}
+           GH_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
+           REPO_OWNER: ${{ github.repository_owner }}
+           REF_NAME: ${{ github.ref_name }}
+           SAFE_BRANCH:  ${{ steps.push.outputs.safe_branch }}
 
   lint:
       runs-on: ubuntu-latest
@@ -125,13 +128,10 @@ jobs:
         - name: Set up GitHub CLI
           run: |
             curl -fsSL https://cli.github.com/install.sh | bash
-
         - name: Authenticate GitHub CLI
           run: |
              unset GH_TOKEN
              echo "${{ secrets.BFI_BOT_TOKEN}}" | gh auth login --with-token
-
-
         - uses: actions/checkout@v4
           with:
             ref: ${{ github.head_ref || github.ref }}
@@ -156,7 +156,6 @@ jobs:
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(C[0-9]\{4\}\)/\1🎨 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(F[0-9]\{4\}\)/\1🛑 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(R[0-9]\{4\}\)/\1♻️ \2/' reports/pylint-report.txt
-
         - name: print file
           run: cat reports/pylint-report.txt
 
@@ -167,7 +166,6 @@ jobs:
             echo "pylint_report<<EOF" >> $GITHUB_ENV
             echo "$pylint_report" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
-
         - name: Check if PR exists
           id: check-pr
           env:
@@ -175,9 +173,7 @@ jobs:
             BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           run: |
             echo "Checking for PR on branch: $BRANCH_NAME"
-
             PR_NUMBER=$(gh pr list --repo "bfidatadigipres/checksum_scripts" --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' 2>/dev/null || echo "error")
-
             echo "Found PR number: $PR_NUMBER"
             if [  "$PR_NUMBER" != "error" ]; then
               echo "exists=true" >> $GITHUB_OUTPUT
@@ -185,7 +181,6 @@ jobs:
             else
               echo "exists=false" >> $GITHUB_OUTPUT
             fi
-
         - name: Comment on PR with Full Pylint Report
           if: steps.check-pr.outputs.exists == 'true'
           uses: peter-evans/create-or-update-comment@v4
@@ -195,12 +190,9 @@ jobs:
             repository: bfidatadigipres/checksum_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
-
               Here is the **formatted** Pylint report:
-
               ```plaintext
               ${{ env.pylint_report }}
               ```
-
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
             token: ${{ secrets.BFI_BOT_TOKEN }}
