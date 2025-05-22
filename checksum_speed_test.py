@@ -104,6 +104,7 @@ def main():
         print(sys.argv)
         print("Please remember to supply a file name to run size checks against:\npython3 checksum.py /path_to_file/video.mkv")
     else:
+        print(sys.argv)
         filepath = sys.argv[1]
         if not (os.path.isfile(filepath)):
             print("ERROR: Path not valid. Please try again.")
