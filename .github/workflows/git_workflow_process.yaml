@@ -82,6 +82,7 @@ jobs:
         if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
             echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
+
             # Query the GitHub API to check for existing PRs
             PR_EXISTS=$(gh pr list \
                 --repo "bfidatadigipres/checksum_scripts" \
@@ -91,6 +92,7 @@ jobs:
                 --json number \
                 --jq 'length' 2>/dev/null || echo "error")
             echo "PR_EXISTS raw value: $PR_EXISTS"
+
             if [ "$PR_EXISTS" = "error" ]; then
               echo "Error querying GitHub API — assuming no PR exists"
               echo "create_pr=true" >> $GITHUB_OUTPUT
@@ -128,10 +130,12 @@ jobs:
         - name: Set up GitHub CLI
           run: |
             curl -fsSL https://cli.github.com/install.sh | bash
+
         - name: Authenticate GitHub CLI
           run: |
              unset GH_TOKEN
              echo "${{ secrets.BFI_BOT_TOKEN}}" | gh auth login --with-token
+
         - uses: actions/checkout@v4
           with:
             ref: ${{ github.head_ref || github.ref }}
@@ -156,6 +160,7 @@ jobs:
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(C[0-9]\{4\}\)/\1🎨 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(F[0-9]\{4\}\)/\1🛑 \2/' reports/pylint-report.txt
             sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(R[0-9]\{4\}\)/\1♻️ \2/' reports/pylint-report.txt
+
         - name: print file
           run: cat reports/pylint-report.txt
 
@@ -168,6 +173,7 @@ jobs:
             echo "$pylint_report"
             echo "EOF"
             } >> $GITHUB_ENV
+
         - name: Check if PR exists
           id: check-pr
           env:
@@ -175,7 +181,9 @@ jobs:
             BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           run: |
             echo "Checking for PR on branch: $BRANCH_NAME"
+
             PR_NUMBER=$(gh pr list --repo "bfidatadigipres/checksum_scripts" --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' 2>/dev/null || echo "error")
+
             echo "Found PR number: $PR_NUMBER"
             if [  "$PR_NUMBER" != "error" ]; then
               echo "exists=true" >> $GITHUB_OUTPUT
@@ -183,6 +191,7 @@ jobs:
             else
               echo "exists=false" >> $GITHUB_OUTPUT
             fi
+
         - name: Comment on PR with Full Pylint Report
           if: steps.check-pr.outputs.exists == 'true'
           uses: peter-evans/create-or-update-comment@v4
@@ -192,9 +201,11 @@ jobs:
             repository: bfidatadigipres/checksum_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
+              
               Here is the **formatted** Pylint report:
               ```plaintext
               ${{ env.pylint_report }}
               ```
+
               **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
             token: ${{ secrets.BFI_BOT_TOKEN }}
