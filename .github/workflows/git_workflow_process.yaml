@@ -21,7 +21,6 @@ jobs:
           echo "github.ref: ${{ github.ref }}"
           echo "github.head_ref: ${{ github.head_ref }}"
           echo "repo owner: ${{ github.repository_owner }}"
-
       - uses: actions/checkout@v4
         with:
           ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
@@ -75,12 +74,8 @@ jobs:
       - name: Commit changes back to branch
         if: steps.check-changes.outputs.changes == 'true'
         run: |
-          TIMESTAMP=$(date +%s)
-          FORMAT_BRANCH="${{ github.head_ref || github.ref_name }}-format-${TIMESTAMP}"
           git add .
           git commit -m "Apply automatic formatting with Black and isort"
-          git push origin "${FORMAT_BRANCH}"
-          echo "format_branch=${FORMAT_BRANCH}" >> $GITHUB_OUTPUT
 
       - name: Check if PR exists
         id: check-pr
@@ -96,7 +91,6 @@ jobs:
                 --state open \
                 --json number \
                 --jq 'length' 2>/dev/null || echo "error")
-
             echo "PR_EXISTS raw value: $PR_EXISTS"
 
             if [ "$PR_EXISTS" = "error" ]; then
@@ -125,7 +119,7 @@ jobs:
                 --title "Automated PR for branch: $REF_NAME" \
                 --body "This PR was automatically created from branch: $REF_NAME" \
         env:
-           GH_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
+           GH_TOKEN: ${{secrets.BFI_BOT_TOKEN }}
            REPO_OWNER: ${{ github.repository_owner }}
            REF_NAME: ${{ github.ref_name }}
 
@@ -141,7 +135,6 @@ jobs:
           run: |
              unset GH_TOKEN
              echo "${{ secrets.BFI_BOT_TOKEN}}" | gh auth login --with-token
-
 
         - uses: actions/checkout@v4
           with:
@@ -174,10 +167,12 @@ jobs:
         - name: Save Pylint report content to an environment file
           id: save_report
           run: |
+           {
             pylint_report=$(cat reports/pylint-report.txt)
-            echo "pylint_report<<EOF" >> $GITHUB_ENV
-            echo "$pylint_report" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+            echo "pylint_report<<EOF"
+            echo "$pylint_report"
+            echo "EOF"
+            } >> $GITHUB_ENV
 
         - name: Check if PR exists
           id: check-pr
@@ -206,9 +201,8 @@ jobs:
             repository: bfidatadigipres/checksum_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
-
+              
               Here is the **formatted** Pylint report:
-
               ```plaintext
               ${{ env.pylint_report }}
               ```
