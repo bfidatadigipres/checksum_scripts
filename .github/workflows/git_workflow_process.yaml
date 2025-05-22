@@ -2,7 +2,7 @@ name: Automated Formatting and PR Workflow
 
 on:
   push:
-    branches-ignore: ['*']  # Skip main branch
+    branches-ignore: ['*']
   pull_request:
     types: [opened, synchronize, reopened]
 
