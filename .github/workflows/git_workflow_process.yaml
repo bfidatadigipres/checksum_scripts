@@ -109,14 +109,15 @@ jobs:
       - name: Create PR
         if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
         run: |
-          gh pr create \
-            --repo "${{ github.repository }}" \
-            --base main \
-            --head "${SAFE_BRANCH}" \
-            --title "Automated formatting fixes" \
-            --body  "This PR contains code formatted automatically by Black and isort."
+           echo "Creating PR for branch $REF_NAME"
+           gh pr create \
+                --repo "bfidatadigipres/checksum_scripts" \
+                --base main \
+                --head "$REPO_OWNER:$REF_NAME" \
+                --title "Automated PR for branch: $REF_NAME" \
+                --body "This PR was automatically created from branch: $REF_NAME" \
         env:
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+           GH_TOKEN: ${{ secrets.BFI_BOT_TOKEN }}
            REPO_OWNER: ${{ github.repository_owner }}
            REF_NAME: ${{ github.ref_name }}
            SAFE_BRANCH:  ${{ steps.push.outputs.safe_branch }}
