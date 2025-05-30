@@ -201,7 +201,7 @@ jobs:
             repository: bfidatadigipres/checksum_scripts
             body: |
               **Automated Pylint Report** 🧑‍💻
-              
+
               Here is the **formatted** Pylint report:
               ```plaintext
               ${{ env.pylint_report }}

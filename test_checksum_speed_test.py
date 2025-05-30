@@ -43,3 +43,13 @@ def test_md5_med_btoken__():
 def test_md5_med_btoken__1():
     md5_check = checksum_speed_test.md5_4096(".!!!!..")
     assert md5_check is None
+
+
+def test_md5_med_btoken__55():
+    md5_check = checksum_speed_test.md5_4096(".!!!!..")
+    assert md5_check is None
+
+
+def test_md5_med_btoken__555():
+    md5_check = checksum_speed_test.md5_4096(".!!!!..")
+    assert md5_check is None
