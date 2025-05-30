@@ -51,13 +51,23 @@ jobs:
           ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
           token: ${{ steps.get_workflow_token.outputs.token  }}
           fetch-depth: 0
-      - name: Test App Installation
+
+      - name: Detailed Token and Access Test
         run: |
-            echo "Testing if app can access target repo..."
-            gh api repos/bfidatadigipres/checksum_scripts || echo "Cannot access repo"
-            gh api repos/bfidatadigipres/checksum_scripts/installation || echo "No installation found"
+          echo "=== Token Info ==="
+          gh auth status
+
+          echo "=== Repository Access Test ==="
+          gh api repos/bfidatadigipres/checksum_scripts/pulls --method GET -q '.[] | .number' || echo "Cannot list PRs"
+
+          echo "=== Installation Test ==="
+          gh api /repos/bfidatadigipres/checksum_scripts/installation -q '.id' || echo "No installation ID found"
+
+          echo "=== App Permissions Test ==="
+          gh api /repos/bfidatadigipres/checksum_scripts/installation -q '.permissions' || echo "Cannot get permissions"
         env:
-            GH_TOKEN: ${{steps.get_workflow_token.outputs.token }}
+          GH_TOKEN: ${{steps.get_workflow_token.outputs.token }}
+
 
       - name: Run Black (format instead of check)
         uses: psf/black@stable
