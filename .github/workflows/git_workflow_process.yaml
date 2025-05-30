@@ -183,6 +183,26 @@ jobs:
             application_id: ${{ secrets.GH_APP_ID }}
             application_private_key: ${{ secrets.GH_APP_PK }}
 
+        - name: Find Installation ID
+          id: find_installation_id
+          run: |
+              # Create a JWT token for your app
+              JWT=$(ruby -rjwt -e 'private_key = OpenSSL::PKey::RSA.new(ENV["PRIVATE_KEY"].gsub("\\n", "\n"));
+              payload = { iat: Time.now.to_i - 60, exp: Time.now.to_i + (10 * 60), iss: ENV["APP_ID"] };
+              puts JWT.encode(payload, private_key, "RS256")')
+
+              # Get the installation ID for the current repository
+              REPO="${GITHUB_REPOSITORY}"
+              INSTALLATION_ID=$(curl -s -H "Authorization: Bearer $JWT" \
+                                 -H "Accept: application/vnd.github.v3+json" \
+                                 "https://api.github.com/repos/$REPO/installation" | jq .id)
+
+              echo "Installation ID: $INSTALLATION_ID"
+              echo "installation_id=$INSTALLATION_ID" >> $GITHUB_OUTPUT
+          env:
+             APP_ID: ${{ secrets.GH_APP_ID }}
+             PRIVATE_KEY: ${{ secrets.GH_APP_PK }}
+
         - name: Set up GitHub CLI
           run: |
             curl -fsSL https://cli.github.com/install.sh | bash
