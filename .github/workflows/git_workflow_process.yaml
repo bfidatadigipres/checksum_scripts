@@ -39,8 +39,8 @@ jobs:
         run: |
               echo "${{ steps.get_workflow_token.outputs.token }}" | gh auth login --with-token
 
-              - name: Debug Token Generation
-              run: |
+      - name: Debug Token Generation
+        run: |
                 echo "Token length: ${#TOKEN}"
                 echo "Token starts with: ${TOKEN:0:20}..."
                 echo "Token ends with: ...${TOKEN: -20}"
@@ -52,8 +52,8 @@ jobs:
                 else
                   echo "Warning: Unexpected token format"
                 fi
-              env:
-                TOKEN: ${{ steps.get_workflow_token.outputs.token }}
+        env:
+          TOKEN: ${{ steps.get_workflow_token.outputs.token }}
 
       # - name: Run security scans with CodeQL
       #   uses: github/codeql-action/init@v3
