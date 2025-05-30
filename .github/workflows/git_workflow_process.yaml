@@ -34,9 +34,26 @@ jobs:
           application_private_key: ${{ secrets.GH_APP_PK }}
 
 
+
       - name: Authenticate GitHub CLI
         run: |
               echo "${{ steps.get_workflow_token.outputs.token }}" | gh auth login --with-token
+
+              - name: Debug Token Generation
+              run: |
+                echo "Token length: ${#TOKEN}"
+                echo "Token starts with: ${TOKEN:0:20}..."
+                echo "Token ends with: ...${TOKEN: -20}"
+                # Check if token is properly formatted (should start with ghs_)
+                if [[ "$TOKEN" == ghs_* ]]; then
+                  echo "Token format looks correct (GitHub App installation token)"
+                elif [[ "$TOKEN" == ghp_* ]]; then
+                  echo "Warning: This looks like a personal access token"
+                else
+                  echo "Warning: Unexpected token format"
+                fi
+              env:
+                TOKEN: ${{ steps.get_workflow_token.outputs.token }}
 
       # - name: Run security scans with CodeQL
       #   uses: github/codeql-action/init@v3
@@ -51,22 +68,6 @@ jobs:
           ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
           token: ${{ steps.get_workflow_token.outputs.token  }}
           fetch-depth: 0
-
-      - name: Detailed Token and Access Test
-        run: |
-          echo "=== Token Info ==="
-          gh auth status
-
-          echo "=== Repository Access Test ==="
-          gh api repos/bfidatadigipres/checksum_scripts/pulls --method GET -q '.[] | .number' || echo "Cannot list PRs"
-
-          echo "=== Installation Test ==="
-          gh api /repos/bfidatadigipres/checksum_scripts/installation -q '.id' || echo "No installation ID found"
-
-          echo "=== App Permissions Test ==="
-          gh api /repos/bfidatadigipres/checksum_scripts/installation -q '.permissions' || echo "Cannot get permissions"
-        env:
-          GH_TOKEN: ${{steps.get_workflow_token.outputs.token }}
 
 
       - name: Run Black (format instead of check)
