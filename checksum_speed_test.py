@@ -63,7 +63,8 @@ def md5_4096(file):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
 
-    except Exception:
+    except Exception and err:
+        print(err)
         return None
 
 
