@@ -21,329 +21,191 @@ jobs:
           echo "github.ref: ${{ github.ref }}"
           echo "github.head_ref: ${{ github.head_ref }}"
           echo "repo owner: ${{ github.repository_owner }}"
+      - uses: actions/checkout@v4
+        with:
+          ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+
+      - name: Setup Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up GitHub CLI
         run: |
               sudo apt-get update && sudo apt-get install -y gh
 
-      - name: Generate App JWT
-        id: generate_jwt
+      - name: Authenticate GitHub CLI
         run: |
-          PRIVATE_KEY=$(echo "${{ secrets.GH_APP_PK }}" | tr -d '\r')
-          APP_ID=${{ secrets.GH_APP_ID }}
-          NOW=$(date +%s)
-          IAT=$((NOW - 60))
-          EXP=$((NOW + 600))
+              echo "${{ secrets.BFI_BOT_TOKEN }}" | gh auth login --with-token
 
-          PAYLOAD=$(echo -n "{\"iat\":$IAT,\"exp\":$EXP,\"iss\":$APP_ID}" | base64 | tr -d '=' | tr '/+' '_-')
-          HEADER=$(echo -n '{"alg":"RS256","typ":"JWT"}' | base64 | tr -d '=' | tr '/+' '_-')
+      # - name: Run security scans with CodeQL
+      #   uses: github/codeql-action/init@v3
+      #   with:
+      #         languages: python
 
-          SIGNATURE=$(echo -n "$HEADER.$PAYLOAD" | openssl dgst -sha256 -sign <(echo "$PRIVATE_KEY") | base64 | tr -d '=' | tr '/+' '_-')
-          JWT="$HEADER.$PAYLOAD.$SIGNATURE"
+      # - name: Analyze code with CodeQL
+      #   uses: github/codeql-action/analyze@v2
 
-          echo "jwt=$JWT" >> $GITHUB_OUTPUT
+      - name: Run Black (format instead of check)
+        uses: psf/black@stable
+        with:
+          options: "."
 
-      - name: Get Installation ID and Token
-        id: get_token
+      - name: Run isort (apply changes)
+        uses: isort/isort-action@v1
+        with:
+          requirements-files: ""
+          sort-paths: "."
+          configuration: "--profile black"
+
+      - name: Check for formatting changes
+        id: check-changes
         run: |
-          # List installations to find the ID
-          INSTALLATIONS=$(curl -s -H "Authorization: Bearer ${{ steps.generate_jwt.outputs.jwt }}" \
-                            -H "Accept: application/vnd.github.v3+json" \
-                            https://api.github.com/app/installations)
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Formatting changes were needed and have been applied"
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No formatting changes needed"
+          fi
+      - name: Commit changes back to branch
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          git add .
+          git commit -m "Apply automatic formatting with Black and isort"
 
-          echo "Available installations:"
-          echo "$INSTALLATIONS" | jq '.[] | {id, account: .account.login}'
+      - name: Check if PR exists
+        id: check-pr
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+        run: |
+            echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
 
-          # Get the installation for our target org/user
-          INSTALLATION_ID=$(echo "$INSTALLATIONS" | jq '.[] | select(.account.login=="TARGET_ORG_OR_USER") | .id')
-          echo "Found installation ID: $INSTALLATION_ID"
+            # Query the GitHub API to check for existing PRs
+            PR_EXISTS=$(gh pr list \
+                --repo "bfidatadigipres/checksum_scripts" \
+                --head "${BRANCH_NAME}" \
+                --base main \
+                --state open \
+                --json number \
+                --jq 'length' 2>/dev/null || echo "error")
+            echo "PR_EXISTS raw value: $PR_EXISTS"
 
-          # Get token for this installation
-          TOKEN_RESPONSE=$(curl -s -X POST \
-                            -H "Authorization: Bearer ${{ steps.generate_jwt.outputs.jwt }}" \
-                            -H "Accept: application/vnd.github.v3+json" \
-                            https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens)
-
-          INSTALLATION_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.token')
-          echo "token=$INSTALLATION_TOKEN" >> $GITHUB_OUTPUT
-
-          # Test token access
-          echo "Testing token with target repo..."
-          curl -s -H "Authorization: token $INSTALLATION_TOKEN" \
-                -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/TARGET_ORG_OR_USER/TARGET_REPO | jq '.name'
-
-
-
-
-  #     - name: Authenticate GitHub CLI
-  #       run: |
-  #             echo "${{ steps.get_workflow_token.outputs.token }}" | gh auth login --with-token
-
-  #     - name: Progressive API Testing
-  #       run: |
-  #         echo "=== Testing basic auth ==="
-  #         gh api user -q '.login' || echo "Basic auth failed"
-
-  #         echo "=== Testing repository access ==="
-  #         gh api repos/bfidatadigipres/checksum_scripts -q '.name' || echo "Repo access failed"
-
-  #         echo "=== Testing pull request listing ==="
-  #         gh api repos/bfidatadigipres/checksum_scripts/pulls -q 'length' || echo "PR listing failed"
-
-  #         echo "=== Testing installation endpoint directly ==="
-  #         curl -H "Authorization: Bearer $GH_TOKEN" \
-  #               -H "Accept: application/vnd.github.v3+json" \
-  #               https://api.github.com/repos/bfidatadigipres/checksum_scripts/installation || echo "Installation API failed"
-  #       env:
-  #         GH_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
-
-  #     # - name: Run security scans with CodeQL
-  #     #   uses: github/codeql-action/init@v3
-  #     #   with:
-  #     #         languages: python
-
-  #     # - name: Analyze code with CodeQL
-  #     #   uses: github/codeql-action/analyze@v2
-
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         ref:  ${{ github.head_ref != '' && github.head_ref || github.ref != '' && github.ref || 'main' }}
-  #         token: ${{ steps.get_workflow_token.outputs.token  }}
-  #         fetch-depth: 0
+            if [ "$PR_EXISTS" = "error" ]; then
+              echo "Error querying GitHub API — assuming no PR exists"
+              echo "create_pr=true" >> $GITHUB_OUTPUT
+            elif [ "$PR_EXISTS" -gt 0 ]; then
+              echo "PR for branch $BRANCH_NAME already exists"
+              echo "create_pr=false" >> $GITHUB_OUTPUT
+            else
+              echo "No PR exists for branch $BRANCH_NAME"
+              echo "create_pr=true" >> $GITHUB_OUTPUT
+            fi
+        env:
+            GH_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
+            BRANCH_NAME: ${{ github.ref_name || github.ref}}
 
 
-  #     - name: Run Black (format instead of check)
-  #       uses: psf/black@stable
-  #       with:
-  #         options: "."
+      - name: Create PR
+        if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
+        run: |
+              echo "Creating PR for branch $REF_NAME"
+              gh pr create \
+                --repo "bfidatadigipres/checksum_scripts" \
+                --base main \
+                --head "$REPO_OWNER:$REF_NAME" \
+                --title "Automated PR for branch: $REF_NAME" \
+                --body "This PR was automatically created from branch: $REF_NAME" \
+        env:
+           GH_TOKEN: ${{secrets.BFI_BOT_TOKEN }}
+           REPO_OWNER: ${{ github.repository_owner }}
+           REF_NAME: ${{ github.ref_name }}
 
-  #     - name: Run isort (apply changes)
-  #       uses: isort/isort-action@v1
-  #       with:
-  #         requirements-files: ""
-  #         sort-paths: "."
-  #         configuration: "--profile black"
+  lint:
+      runs-on: ubuntu-latest
+      needs: format-and-create-pr
+      steps:
+        - name: Set up GitHub CLI
+          run: |
+            curl -fsSL https://cli.github.com/install.sh | bash
 
-  #     - name: Check for formatting changes
-  #       id: check-changes
-  #       run: |
-  #         if [[ -n "$(git status --porcelain)" ]]; then
-  #           echo "changes=true" >> $GITHUB_OUTPUT
-  #           echo "Formatting changes were needed and have been applied"
-  #         else
-  #           echo "changes=false" >> $GITHUB_OUTPUT
-  #           echo "No formatting changes needed"
-  #         fi
-  #     - name: Commit changes back to branch
-  #       if: steps.check-changes.outputs.changes == 'true'
-  #       run: |
-  #         git add .
-  #         git commit -m "Apply automatic formatting with Black and isort"
+        - name: Authenticate GitHub CLI
+          run: |
+             unset GH_TOKEN
+             echo "${{ secrets.BFI_BOT_TOKEN}}" | gh auth login --with-token
 
-  #     - name: Check if PR exists
-  #       id: check-pr
-  #       if: github.event_name == 'push' && github.ref != 'refs/heads/main'
-  #       run: |
-  #           echo "Checking for PR in datadigipres/checksum_scripts for branch: $BRANCH_NAME"
+        - uses: actions/checkout@v4
+          with:
+            ref: ${{ github.head_ref || github.ref }}
+            fetch-depth: 0
 
-  #           # Query the GitHub API to check for existing PRs
-  #           PR_EXISTS=$(gh pr list \
-  #               --repo "bfidatadigipres/checksum_scripts" \
-  #               --head "${BRANCH_NAME}" \
-  #               --base main \
-  #               --state open \
-  #               --json number \
-  #               --jq 'length' 2>/dev/null || echo "error")
-  #           echo "PR_EXISTS raw value: $PR_EXISTS"
+        - run: git pull
 
-  #           if [ "$PR_EXISTS" = "error" ]; then
-  #             echo "Error querying GitHub API — assuming no PR exists"
-  #             echo "create_pr=true" >> $GITHUB_OUTPUT
-  #           elif [ "$PR_EXISTS" -gt 0 ]; then
-  #             echo "PR for branch $BRANCH_NAME already exists"
-  #             echo "create_pr=false" >> $GITHUB_OUTPUT
-  #           else
-  #             echo "No PR exists for branch $BRANCH_NAME"
-  #             echo "create_pr=true" >> $GITHUB_OUTPUT
-  #           fi
-  #       env:
-  #           GH_TOKEN: ${{steps.get_workflow_token.outputs.token}}
-  #           BRANCH_NAME: ${{ github.ref_name || github.ref}}
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
 
-  #     - name: Create PR with head_repo parameter
-  #       if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
-  #       run: |
-  #         echo "Creating cross-repository PR"
+        - run: pip install pylint
 
-  #         RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
-  #           -H "Authorization: Bearer $GH_TOKEN" \
-  #           -H "Accept: application/vnd.github+json" \
-  #           -H "Content-Type: application/json" \
-  #           https://api.github.com/repos/bfidatadigipres/checksum_scripts/pulls \
-  #           -d '{
-  #             "title": "Automated PR for branch: '"$REF_NAME"'",
-  #             "body": "This PR was automatically created from branch: '"$REF_NAME"'",
-  #             "head": "'"$REF_NAME"'",
-  #             "head_repo": "'"$REPO_OWNER"'/checksum_scripts",
-  #             "base": "main"
-  #           }')
+        - id: pylint
+          run: |
+            export LANG=en_US.UTF-8
+            mkdir -p reports
+            python -m pylint *.py > reports/pylint-report.txt || true
+            sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(E[0-9]\{4\}\)/\1🚨 \2/' reports/pylint-report.txt
+            sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(W[0-9]\{4\}\)/\1⚠️ \2/' reports/pylint-report.txt
+            sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(I[0-9]\{4\}\)/\1ℹ️ \2/' reports/pylint-report.txt
+            sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(C[0-9]\{4\}\)/\1🎨 \2/' reports/pylint-report.txt
+            sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(F[0-9]\{4\}\)/\1🛑 \2/' reports/pylint-report.txt
+            sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(R[0-9]\{4\}\)/\1♻️ \2/' reports/pylint-report.txt
 
-  #         HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
-  #         BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS:/d')
+        - name: print file
+          run: cat reports/pylint-report.txt
 
-  #         echo "HTTP Status: $HTTP_STATUS"
-  #         echo "Response: $BODY"
-  #       env:
-  #         GH_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
-  #         REPO_OWNER: ${{ github.repository_owner }}
-  #         REF_NAME: ${{ github.ref_name }}
+        - name: Save Pylint report content to an environment file
+          id: save_report
+          run: |
+           {
+            pylint_report=$(cat reports/pylint-report.txt)
+            echo "pylint_report<<EOF"
+            echo "$pylint_report"
+            echo "EOF"
+            } >> $GITHUB_ENV
 
-  #     - name: Debug - Check Token Access
-  #       run: |
-  #           echo "Testing access to source repo..."
-  #           gh api repos/source-owner/source-repo
+        - name: Check if PR exists
+          id: check-pr
+          env:
+            GITHUB_TOKEN: ${{secrets.BFI_BOT_TOKEN}}
+            BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          run: |
+            echo "Checking for PR on branch: $BRANCH_NAME"
 
-  #           echo "Testing access to target repo..."
-  #           gh api repos/target-owner/target-repo
+            PR_NUMBER=$(gh pr list --repo "bfidatadigipres/checksum_scripts" --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' 2>/dev/null || echo "error")
 
-  #           echo "Testing ability to create PR..."
-  #           gh api repos/target-owner/target-repo/pulls --method POST --input - <<EOF || true
-  #           {
-  #             "title": "TEST PR - Will be deleted",
-  #             "head": "source-owner:source-branch",
-  #             "base": "main",
-  #             "body": "Debug test - this will be deleted"
-  #           }
-  #           EOF
-  #       env:
-  #         GH_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
-  #     # - name: Create PR
-  #     #   if: steps.check-pr.outputs.create_pr == 'true' && github.event_name == 'push' && github.ref != 'refs/heads/main'
-  #     #   run: |
-  #     #         echo "Creating PR for branch $REF_NAME"
-  #     #         gh pr create \
-  #     #           --repo "bfidatadigipres/checksum_scripts" \
-  #     #           --base main \
-  #     #           --head "$REPO_OWNER:$REF_NAME" \
-  #     #           --title "Automated PR for branch: $REF_NAME" \
-  #     #           --body "This PR was automatically created from branch: $REF_NAME" \
-  #     #   env:
-  #     #      GH_TOKEN: ${{steps.get_workflow_token.outputs.token }}
-  #     #      REPO_OWNER: ${{ github.repository_owner }}
-  #     #      REF_NAME: ${{ github.ref_name }}
+            echo "Found PR number: $PR_NUMBER"
+            if [  "$PR_NUMBER" != "error" ]; then
+              echo "exists=true" >> $GITHUB_OUTPUT
+              echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            else
+              echo "exists=false" >> $GITHUB_OUTPUT
+            fi
 
-  # lint:
-  #     runs-on: ubuntu-latest
-  #     needs: format-and-create-pr
-  #     steps:
-  #       - name: Get Token
-  #         id: get_workflow_token
-  #         uses: peter-murray/workflow-application-token-action@v4
-  #         with:
-  #           application_id: ${{ secrets.GH_APP_ID }}
-  #           application_private_key: ${{ secrets.GH_APP_PK }}
+        - name: Comment on PR with Full Pylint Report
+          if: steps.check-pr.outputs.exists == 'true'
+          uses: peter-evans/create-or-update-comment@v4
+          with:
+            issue-number: ${{ steps.check-pr.outputs.number }}
+            edit-mode: replace
+            repository: bfidatadigipres/checksum_scripts
+            body: |
+              **Automated Pylint Report** 🧑‍💻
 
-  #       - name: Find Installation ID
-  #         id: find_installation_id
-  #         run: |
-  #             # Create a JWT token for your app
-  #             JWT=$(ruby -rjwt -e 'private_key = OpenSSL::PKey::RSA.new(ENV["PRIVATE_KEY"].gsub("\\n", "\n"));
-  #             payload = { iat: Time.now.to_i - 60, exp: Time.now.to_i + (10 * 60), iss: ENV["APP_ID"] };
-  #             puts JWT.encode(payload, private_key, "RS256")')
+              Here is the **formatted** Pylint report:
+              ```plaintext
+              ${{ env.pylint_report }}
+              ```
 
-  #             # Get the installation ID for the current repository
-  #             REPO="${GITHUB_REPOSITORY}"
-  #             INSTALLATION_ID=$(curl -s -H "Authorization: Bearer $JWT" \
-  #                                -H "Accept: application/vnd.github.v3+json" \
-  #                                "https://api.github.com/repos/$REPO/installation" | jq .id)
-
-  #             echo "Installation ID: $INSTALLATION_ID"
-  #             echo "installation_id=$INSTALLATION_ID" >> $GITHUB_OUTPUT
-  #         env:
-  #            APP_ID: ${{ secrets.GH_APP_ID }}
-  #            PRIVATE_KEY: ${{ secrets.GH_APP_PK }}
-
-  #       - name: Set up GitHub CLI
-  #         run: |
-  #           curl -fsSL https://cli.github.com/install.sh | bash
-
-  #       - name: Authenticate GitHub CLI
-  #         run: |
-  #            unset GH_TOKEN
-  #            echo "${{ steps.get_workflow_token.outputs.token}}" | gh auth login --with-token
-
-  #       - uses: actions/checkout@v4
-  #         with:
-  #           ref: ${{ github.head_ref || github.ref }}
-  #           token: ${{ steps.get_workflow_token.outputs.token  }}
-  #           fetch-depth: 0
-
-  #       - run: git pull
-
-  #       - uses: actions/setup-python@v5
-  #         with:
-  #           python-version: '3.12'
-
-  #       - run: pip install pylint
-
-  #       - id: pylint
-  #         run: |
-  #           export LANG=en_US.UTF-8
-  #           mkdir -p reports
-  #           python -m pylint *.py > reports/pylint-report.txt || true
-  #           sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(E[0-9]\{4\}\)/\1🚨 \2/' reports/pylint-report.txt
-  #           sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(W[0-9]\{4\}\)/\1⚠️ \2/' reports/pylint-report.txt
-  #           sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(I[0-9]\{4\}\)/\1ℹ️ \2/' reports/pylint-report.txt
-  #           sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(C[0-9]\{4\}\)/\1🎨 \2/' reports/pylint-report.txt
-  #           sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(F[0-9]\{4\}\)/\1🛑 \2/' reports/pylint-report.txt
-  #           sed -i 's/\(.*:[0-9]\+:[0-9]\+:[[:space:]]*\)\(R[0-9]\{4\}\)/\1♻️ \2/' reports/pylint-report.txt
-
-  #       - name: print file
-  #         run: cat reports/pylint-report.txt
-
-  #       - name: Save Pylint report content to an environment file
-  #         id: save_report
-  #         run: |
-  #          {
-  #           pylint_report=$(cat reports/pylint-report.txt)
-  #           echo "pylint_report<<EOF"
-  #           echo "$pylint_report"
-  #           echo "EOF"
-  #           } >> $GITHUB_ENV
-
-  #       - name: Check if PR exists
-  #         id: check-pr
-  #         env:
-  #           GITHUB_TOKEN: ${{steps.get_workflow_token.outputs.token}}
-  #           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-  #         run: |
-  #           echo "Checking for PR on branch: $BRANCH_NAME"
-
-  #           PR_NUMBER=$(gh pr list --repo "bfidatadigipres/checksum_scripts" --head "$BRANCH_NAME" --state open --json number --jq '.[0].number' 2>/dev/null || echo "error")
-
-  #           echo "Found PR number: $PR_NUMBER"
-  #           if [  "$PR_NUMBER" != "error" ]; then
-  #             echo "exists=true" >> $GITHUB_OUTPUT
-  #             echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
-  #           else
-  #             echo "exists=false" >> $GITHUB_OUTPUT
-  #           fi
-
-  #       - name: Comment on PR with Full Pylint Report
-  #         if: steps.check-pr.outputs.exists == 'true'
-  #         uses: peter-evans/create-or-update-comment@v4
-  #         with:
-  #           issue-number: ${{ steps.check-pr.outputs.number }}
-  #           edit-mode: replace
-  #           repository: bfidatadigipres/checksum_scripts
-  #           body: |
-  #             **Automated Pylint Report** 🧑‍💻
-
-  #             Here is the **formatted** Pylint report:
-  #             ```plaintext
-  #             ${{ env.pylint_report }}
-  #             ```
-
-  #             **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
-  #           token: ${{ steps.get_workflow_token.outputs.token }}
+              **Note:** 🚨 Errors need immediate attention! ⚠️ Warnings should be reviewed, but are less critical. ℹ️ Information messages are for your reference.
+            token: ${{ secrets.BFI_BOT_TOKEN }}
