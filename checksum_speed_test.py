@@ -47,7 +47,8 @@ def crc_4096(file):
                 buffr = afile.read(buffersize)
         return format(crcvalue & 0xFFFFFFFF, "08x")
 
-    except Exception:
+    except Exception as err:
+        print(err)
         return None
 
 
