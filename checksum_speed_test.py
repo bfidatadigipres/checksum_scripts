@@ -47,7 +47,8 @@ def crc_4096(file):
                 buffr = afile.read(buffersize)
         return format(crcvalue & 0xFFFFFFFF, "08x")
 
-    except Exception:
+    except Exception as err:
+        print(err)
         return None
 
 
@@ -62,7 +63,8 @@ def md5_4096(file):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
 
-    except Exception:
+    except Exception as err:
+        print(err)
         return None
 
 
