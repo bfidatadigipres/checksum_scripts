@@ -39,23 +39,23 @@ jobs:
         run: |
               echo "${{ steps.get_workflow_token.outputs.token }}" | gh auth login --with-token
 
-              - name: Progressive API Testing
-              run: |
-                echo "=== Testing basic auth ==="
-                gh api user -q '.login' || echo "Basic auth failed"
+      - name: Progressive API Testing
+        run: |
+          echo "=== Testing basic auth ==="
+          gh api user -q '.login' || echo "Basic auth failed"
 
-                echo "=== Testing repository access ==="
-                gh api repos/bfidatadigipres/checksum_scripts -q '.name' || echo "Repo access failed"
+          echo "=== Testing repository access ==="
+          gh api repos/bfidatadigipres/checksum_scripts -q '.name' || echo "Repo access failed"
 
-                echo "=== Testing pull request listing ==="
-                gh api repos/bfidatadigipres/checksum_scripts/pulls -q 'length' || echo "PR listing failed"
+          echo "=== Testing pull request listing ==="
+          gh api repos/bfidatadigipres/checksum_scripts/pulls -q 'length' || echo "PR listing failed"
 
-                echo "=== Testing installation endpoint directly ==="
-                curl -H "Authorization: Bearer $GH_TOKEN" \
-                     -H "Accept: application/vnd.github.v3+json" \
-                     https://api.github.com/repos/bfidatadigipres/checksum_scripts/installation || echo "Installation API failed"
-              env:
-                GH_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
+          echo "=== Testing installation endpoint directly ==="
+          curl -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/bfidatadigipres/checksum_scripts/installation || echo "Installation API failed"
+        env:
+          GH_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
 
       # - name: Run security scans with CodeQL
       #   uses: github/codeql-action/init@v3
