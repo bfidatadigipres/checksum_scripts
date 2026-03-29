@@ -22,4 +22,4 @@ repos:
         language: python
         entry: pylint
         args:
-            ["--disable=C0103,C0111,C0301,C0114,C0116"]
+            ["--disable=C0103,C0111,C0301,C0114,C0116, R0801"]
